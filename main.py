@@ -6,9 +6,9 @@ from openai import OpenAI
 
 OPENROUTER_API_KEY = ""
 
-NAME = "Nattawut Depaiwa"  # Name
-ID = "67991000"  # id
-EMAIL = "67991000@kmitl.ac.th"  # email
+NAME = "Natpakan Tabudda"  # Name
+ID = "67991039"  # id
+EMAIL = "67991039@kmitl.ac.th"  # email
 CLASS = 3  # Index your class appears at in the choices. e.g. M1 -> 0, M2 -> 1, C1 -> 2 ... E2 -> 5
 
 NEXT_BUTTON_LABEL = ["Next", "ถัดไป"]
@@ -24,7 +24,7 @@ def prompt_llm(messages, response_format):
     )
 
     completion = client.chat.completions.create(
-        model="openai/gpt-4.1-nano",
+        model="google/gemini-2.5-flash",
         messages=messages,
         response_format=response_format,
     )
@@ -253,7 +253,6 @@ def solve_page(page: Page):
 
 
 def main():
-
     load_dotenv()
 
     form_url = (
