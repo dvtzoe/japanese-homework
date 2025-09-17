@@ -9,8 +9,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "baseUrl": ".",
+    "composite": true,
     "paths": {
       "@cli/*": [
         "./apps/cli/src/*",

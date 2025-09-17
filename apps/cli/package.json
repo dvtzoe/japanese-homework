@@ -4,7 +4,7 @@
   "description": "CLI for Japanese Homework",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "run": "node ./dist/index.js",
     "clean": "rm -rf dist",
     "lint": "biome check",

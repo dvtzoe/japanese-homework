@@ -4,7 +4,7 @@
   "description": "Server for Japanese Homework",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "dev": "tsc --watch",
     "run": "node ./dist/index.js",
     "clean": "rm -rf dist",
