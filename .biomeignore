@@ -1,0 +1,9 @@
+# Exclude apps/web as it uses Prettier instead
+apps/web/**
+
+# Standard exclusions
+node_modules/**
+dist/**
+.turbo/**
+.next/**
+.astro/**

@@ -21,6 +21,7 @@
   "license": "GPL-3.0",
   "packageManager": "pnpm@10.16.1",
   "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
     "turbo": "^2.5.6"
   }
 }
