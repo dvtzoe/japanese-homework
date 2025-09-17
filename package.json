@@ -6,6 +6,7 @@
     "apps/*",
     "packages/*"
   ],
+  "private": true,
   "scripts": {
     "dev": "turbo dev",
     "dev:server": "pnpm -F @jphw/server dev",
