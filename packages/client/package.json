@@ -12,5 +12,8 @@
   },
   "author": "dvtzoe",
   "license": "AGPL-3.0-only",
-  "packageManager": "pnpm@10.16.1"
+  "packageManager": "pnpm@10.16.1",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
 }
