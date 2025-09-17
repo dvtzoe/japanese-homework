@@ -1,13 +1,18 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@jphw/server",
+  "version": "0.0.0",
+  "description": "Server for Japanese Homework",
+  "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "run": "node ./dist/index.js",
+    "clean": "rm -rf dist",
+    "lint": "biome check",
+    "lint:fix": "biome format",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "dvtzoe",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.16.1"
 }

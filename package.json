@@ -1,20 +1,20 @@
 {
   "name": "japanese-homework",
   "version": "0.0.0",
-  "description": "",
+  "description": "A tool to do KOSEN KMITL Japanese Homework",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev": "turbo dev",
-    "dev:server": "pnpm -F @server dev",
+    "dev:server": "pnpm -F @jphw/server dev",
     "build": "turbo build",
-    "build:server": "pnpm -F @server build",
-    "build:cli": "pnpm -F @cli build",
-    "run": "pnpm -F @cli run",
-    "run:cli": "pnpm -F @cli run",
-    "run:server": "pnpm -F @cli run:server",
+    "build:server": "pnpm -F @jphw/server build",
+    "build:cli": "pnpm -F @jphw/cli build",
+    "run": "pnpm -F @jphw/cli run",
+    "run:cli": "pnpm -F @jphw/cli run",
+    "run:server": "pnpm -F @jphw/server run",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
     "test": "turbo test",
@@ -22,7 +22,7 @@
     "typecheck": "turbo typecheck"
   },
   "author": "dvtzoe",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.16.1",
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
