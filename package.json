@@ -1,0 +1,26 @@
+{
+  "name": "japanese-homework",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:server": "pnpm -F @server dev",
+    "build": "turbo build",
+    "build:server": "pnpm -F @server build",
+    "build:cli": "pnpm -F @cli build",
+    "run": "pnpm -F @cli run",
+    "run:cli": "pnpm -F @cli run",
+    "run:server": "pnpm -F @cli run:server",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "typecheck": "turbo typecheck"
+  },
+  "author": "dvtzoe",
+  "license": "GPL-3.0",
+  "packageManager": "pnpm@10.16.1",
+  "devDependencies": {
+    "turbo": "^2.5.6"
+  }
+}
