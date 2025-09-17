@@ -6,13 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**/*.ts",
-      "**/*.js",
-      "**/*.tsx",
-      "**/*.jsx",
-      "!apps/web/**/*"
-    ],
+    "includes": ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
     "ignoreUnknown": true
   },
   "formatter": {
