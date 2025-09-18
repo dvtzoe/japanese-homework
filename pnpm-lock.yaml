@@ -23,9 +23,6 @@ importers:
       '@jphw/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@jphw/types':
-        specifier: workspace:*
-        version: link:../../packages/types
     devDependencies:
       typescript:
         specifier: ^5.9.2
