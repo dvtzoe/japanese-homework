@@ -7,8 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --build",
-    "dev": "tsc --watch",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf ./dist",
     "lint": "biome check",
     "lint:fix": "biome format",
     "typecheck": "tsc --noEmit"

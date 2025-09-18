@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf ./dist",
     "lint": "biome check",
     "lint:fix": "biome format",
     "typecheck": "tsc --noEmit"
