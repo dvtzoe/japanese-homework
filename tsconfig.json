@@ -11,23 +11,6 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "composite": true,
-    "paths": {
-      "@cli/*": [
-        "./apps/cli/src/*",
-      ],
-      "@server/*": [
-        "./apps/server/src/*",
-      ],
-      "@client/*": [
-        "./packages/client/src/*",
-      ],
-      "@types/*": [
-        "./packages/types/src/*",
-      ],
-      "@types": [
-        "./packages/types/src/index.ts",
-      ],
-    },
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
