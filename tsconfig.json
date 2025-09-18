@@ -20,16 +20,16 @@
   },
   "references": [
     {
-      "path": "apps/cli",
+      "path": "./apps/cli",
     },
     {
-      "path": "apps/server",
+      "path": "./apps/server",
     },
     {
-      "path": "packages/client",
+      "path": "./packages/client",
     },
     {
-      "path": "packages/types",
+      "path": "./packages/types",
     },
   ],
   "exclude": [
