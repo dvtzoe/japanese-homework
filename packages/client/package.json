@@ -1,5 +1,6 @@
 {
   "name": "@jphw/client",
+  "type": "module",
   "version": "0.0.0",
   "description": "Client for Japanese Homework",
   "main": "./dist/index.js",
