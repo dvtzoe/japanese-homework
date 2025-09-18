@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "run": "node ./dist/index.js",
+    "start": "node ./dist/index.js",
     "clean": "rm -rf dist",
     "lint": "biome check",
     "lint:fix": "biome format",
