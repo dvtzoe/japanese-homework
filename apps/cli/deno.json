@@ -1,0 +1,11 @@
+{
+  "name": "@jphw/cli",
+  "description": "CLI for JPHW",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "tasks": {
+    "start": "deno run ./src/index.ts"
+  }
+}

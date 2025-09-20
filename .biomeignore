@@ -1,4 +1,0 @@
-# Standard exclusions
-node_modules/**
-dist/**
-.turbo/**

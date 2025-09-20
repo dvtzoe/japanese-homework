@@ -1,9 +1,0 @@
-# Dependencies
-**/node_modules/
-
-# Turborepo
-**/.turbo/
-
-# Build outputs
-**/dist/
-**/tsconfig.tsbuildinfo

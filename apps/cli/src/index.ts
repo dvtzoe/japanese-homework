@@ -1,5 +1,5 @@
 import client from "@jphw/client";
 
 console.log("CLI app loaded");
-const result = await client();
+const result = client();
 console.log(result);
