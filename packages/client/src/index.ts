@@ -33,10 +33,29 @@ export default async function client(options: ClientOptions): Promise<void> {
 
   let context: BrowserContext | null = null;
   try {
-    console.log(`Using ${browser} profile at ${profileDir}`);
-    context = browser === "firefox"
-      ? await firefox.launchPersistentContext(profileDir, { headless })
-      : await chromium.launchPersistentContext(profileDir, { headless });
+    try {
+      context = browser === "firefox"
+        ? await firefox.launchPersistentContext(profileDir, { headless })
+        : await chromium.launchPersistentContext(profileDir, { headless });
+    } catch (_error) {
+      console.log(
+        `${browser} browser not found, installing via Playwright...`,
+      );
+      const cmd = new Deno.Command(Deno.execPath(), {
+        args: [
+          "run",
+          "-A",
+          "npm:playwright",
+          "install",
+          browser === "firefox" ? "firefox" : "chromium",
+        ],
+      });
+      const { code } = await cmd.output();
+      if (code !== 0) throw new Error("Playwright install failed");
+      context = browser === "firefox"
+        ? await firefox.launchPersistentContext(profileDir, { headless })
+        : await chromium.launchPersistentContext(profileDir, { headless });
+    }
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
 
