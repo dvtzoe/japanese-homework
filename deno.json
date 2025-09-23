@@ -1,11 +1,11 @@
 {
   "tasks": {
-    "dev": "deno run --watch ./apps/server/src/index.ts",
-    "dev:cli": "deno run --watch ./apps/cli/src/index.ts",
-    "dev:server": "deno run --watch ./apps/server/src/index.ts",
-    "start": "deno run --allow-env ./apps/cli/src/index.ts",
-    "start:cli": "deno run ./apps/cli/src/index.ts",
-    "start:server": "deno run ./apps/server/src/index.ts",
+    "dev": "deno run --watch --allow-env --allow-net --allow-read --allow-write --allow-sys --env-file ./apps/server/src/index.ts",
+    "dev:cli": "deno run --watch --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",
+    "dev:server": "deno run --watch --allow-env --allow-net --allow-read --allow-write --allow-sys --env-file ./apps/server/src/index.ts",
+    "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",
+    "start:cli": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",
+    "start:server": "deno run --allow-env --allow-net --allow-read --allow-write --allow-sys --env-file ./apps/server/src/index.ts",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "test": "deno test",
