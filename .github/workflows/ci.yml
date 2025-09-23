@@ -20,6 +20,10 @@ jobs:
         with:
           deno-version: vx.x
 
+      - name: Format check with Deno
+        run: |
+          deno fmt --check
+
       - name: Lint with Deno
         run: |
           deno lint
