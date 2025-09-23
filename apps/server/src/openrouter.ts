@@ -102,7 +102,5 @@ function buildPrompt(question: QuestionPayload): MessagesContent {
     }
   }
 
-  console.debug(content);
-
   return content;
 }
