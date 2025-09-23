@@ -150,7 +150,7 @@ async function selectDropdown(
   await option.first().waitFor();
 
   if (await option.count() > 0) {
-    const index = answer - 1;
+    const index = answer;
     if (index < 0) {
       console.warn("Dropdown answer index is less than 1.");
       return false;

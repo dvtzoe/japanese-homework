@@ -48,7 +48,7 @@ export async function collectQuestions(page: Page): Promise<QuestionContext[]> {
     } else if (await dropdown.count() > 0) {
       type = "dropdown";
       choices = await Promise.all(
-        (await dropdown.locator("[role='option']").all())
+        (await dropdown.locator("[role='option']").all()).slice(1)
           .map(async (node) => (await node.textContent())?.trim() ?? "")
           .filter(async (choice) => (await choice).length > 0),
       );
