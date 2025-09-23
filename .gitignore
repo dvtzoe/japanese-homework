@@ -1,3 +1,5 @@
 .env
 
 apps/server/data/
+
+AGENTS.md
