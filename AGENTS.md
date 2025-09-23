@@ -22,10 +22,10 @@ suite.
 
 ## Coding Style & Naming Conventions
 
-Rely on `deno fmt` for formatting. TypeScript is compiled in strict mode;
-prefer explicit return types on exported modules. Name files in kebab-case,
-exported symbols in camelCase, types and classes in PascalCase. Keep modules
-small and re-export shared utilities through `packages/client` or `packages/types`.
+Rely on `deno fmt` for formatting. TypeScript is compiled in strict mode; prefer
+explicit return types on exported modules. Name files in kebab-case, exported
+symbols in camelCase, types and classes in PascalCase. Keep modules small and
+re-export shared utilities through `packages/client` or `packages/types`.
 
 ## Testing Guidelines
 

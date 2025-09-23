@@ -12,8 +12,10 @@
     "check": "deno check"
   },
   "workspace": [
-    "./apps/*",
-    "./packages/*"
+    "./apps/cli",
+    "./apps/server",
+    "./packages/client",
+    "./packages/types"
   ],
   "compilerOptions": {
     "strict": true
