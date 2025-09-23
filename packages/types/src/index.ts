@@ -19,6 +19,14 @@ export interface AnswerResponse {
   answer: string;
 }
 
+export interface AnswerBatchRequest {
+  questions: QuestionPayload[];
+}
+
+export interface AnswerBatchResponse {
+  answers: string[];
+}
+
 export type MessagesContent = ({
   type: "text";
   text: string;

@@ -3,8 +3,8 @@ import { type BrowserContext, firefox } from "playwright";
 import { applyAnswer, autoFillQuestion, truncate } from "./autofill.ts";
 import { ensureProfileDir } from "./profile.ts";
 import { collectQuestions } from "./questions.ts";
-import { requestAnswer } from "./server.ts";
-import type { ClientOptions } from "./types.ts";
+import { requestAnswers } from "./server.ts";
+import type { ClientOptions, QuestionContext } from "./types.ts";
 export type { ClientOptions, Credentials } from "./types.ts";
 import { resolve } from "@std/path";
 import { homedir } from "node:os";
@@ -40,6 +40,8 @@ export default async function client(options: ClientOptions): Promise<void> {
         `Detected ${questions.length} questions on page ${pageIndex + 1}`,
       );
 
+      const pending: QuestionContext[] = [];
+
       for (const question of questions) {
         if (credentials && await autoFillQuestion(question, credentials)) {
           continue;
@@ -54,9 +56,22 @@ export default async function client(options: ClientOptions): Promise<void> {
           continue;
         }
 
-        const answer = await requestAnswer(serverUrl, question.payload);
-        console.log(`Answer → ${truncate(answer.answer)}`);
-        await applyAnswer(question, answer.answer);
+        pending.push(question);
+      }
+
+      if (pending.length > 0) {
+        console.log(`Requesting ${pending.length} answer(s) from server...`);
+        const answers = await requestAnswers(
+          serverUrl,
+          pending.map((item) => item.payload),
+        );
+
+        for (let index = 0; index < pending.length; index += 1) {
+          const question = pending[index];
+          const answer = answers[index];
+          console.log(`Answer → ${truncate(answer)}`);
+          await applyAnswer(question, answer);
+        }
       }
 
       const nextButton = page.getByRole("button", { name: /next/i });
