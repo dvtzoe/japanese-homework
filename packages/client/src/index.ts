@@ -1,4 +1,4 @@
-import { type BrowserContext, firefox } from "playwright";
+import { type BrowserContext, chromium, firefox } from "playwright";
 
 import { applyAnswer, autoFillQuestion, truncate } from "./autofill.ts";
 import { ensureProfileDir } from "./profile.ts";
@@ -11,21 +11,32 @@ import { homedir } from "node:os";
 
 const DEFAULT_SERVER_URL = Deno.env.get("SERVER_URL") ??
   "https://zagori.crabdance.com";
-const DEFAULT_PROFILE_DIR = Deno.env.get("PLAYWRIGHT_PROFILE_DIR") ??
-  resolve(homedir(), ".jphw", "firefox-profile");
+
+const DEFAULT_BROWSER: "chromium" | "firefox" = "chromium";
+
+const ENV_PROFILE_DIR = Deno.env.get("PLAYWRIGHT_PROFILE_DIR");
+
+const DEFAULT_PROFILE_DIRS: Record<typeof DEFAULT_BROWSER | "firefox", string> =
+  {
+    chromium: resolve(homedir(), ".jphw", "chromium-profile"),
+    firefox: resolve(homedir(), ".jphw", "firefox-profile"),
+  };
 
 export default async function client(options: ClientOptions): Promise<void> {
   const serverUrl = options.serverUrl ?? DEFAULT_SERVER_URL;
   const headless = options.headless ?? false;
-  const profileDir = await ensureProfileDir(
-    options.profileDir ?? DEFAULT_PROFILE_DIR,
-  );
+  const browser = options.browser ?? DEFAULT_BROWSER;
+  const profileDirInput = options.profileDir ?? ENV_PROFILE_DIR ??
+    DEFAULT_PROFILE_DIRS[browser];
+  const profileDir = await ensureProfileDir(profileDirInput);
   const credentials = options.credentials;
 
   let context: BrowserContext | null = null;
   try {
-    console.log(`Using Firefox profile at ${profileDir}`);
-    context = await firefox.launchPersistentContext(profileDir, { headless });
+    console.log(`Using ${browser} profile at ${profileDir}`);
+    context = browser === "firefox"
+      ? await firefox.launchPersistentContext(profileDir, { headless })
+      : await chromium.launchPersistentContext(profileDir, { headless });
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
 

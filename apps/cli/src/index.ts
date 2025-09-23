@@ -20,16 +20,20 @@ program
     "Server base URL",
     Deno.env.get("SERVER_URL") ?? "https://zagori.crabdance.com",
   )
-  .option("--headless", "Run Firefox in headless mode", false)
+  .option("--headless", "Run the browser in headless mode", false)
+  .option("--firefox", "Use Firefox instead of Chromium", false)
   .option(
     "--profile <dir>",
-    "Persistent Firefox profile directory",
-    Deno.env.get("PLAYWRIGHT_PROFILE_DIR") ??
-      resolve(homedir(), ".jphw", "firefox-profile"),
+    "Persistent browser profile directory",
   )
   .action(async (
     url: string | undefined,
-    options: { server: string; headless?: boolean; profile: string },
+    options: {
+      server: string;
+      headless?: boolean;
+      firefox?: boolean;
+      profile?: string;
+    },
   ) => {
     let targetUrl = url;
     if (!targetUrl) {
@@ -56,6 +60,7 @@ program
         url: trimmedUrl,
         serverUrl: options.server,
         headless: Boolean(options.headless),
+        browser: options.firefox ? "firefox" : "chromium",
         profileDir: options.profile,
         credentials,
         onConfirmNext: () => confirmPrompt("Go to the next page?"),

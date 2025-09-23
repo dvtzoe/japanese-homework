@@ -1,14 +1,16 @@
 # Japanese Homework Assistant
 
-`jphw` automates repetitive Google Form drills by launching Firefox, scraping
-each question, and sending them to an AI-backed server for answers. The project
-ships as a cross-platform CLI plus a Deno server that proxies OpenRouter. This
-guide walks through first-time setup on macOS, Linux, and Windows.
+`jphw` automates repetitive Google Form drills by launching a browser (Chromium
+by default), scraping each question, and sending them to an AI-backed server for
+answers. The project ships as a cross-platform CLI plus a Deno server that
+proxies OpenRouter. This guide walks through first-time setup on macOS, Linux,
+and Windows.
 
 ## Prerequisites
 
 - An [OpenRouter](https://openrouter.ai/) account and API key
-- Firefox installed locally (the CLI drives it through Playwright)
+- Playwright downloads Chromium automatically; pass `--firefox` if you prefer
+  Firefox
 - Deno v1.39+ if you plan to run from source or start the server locally
 
 ## 1. Download the CLI
@@ -54,17 +56,20 @@ questions return instantly.
 
 ## 3. Run the CLI
 
-Launch the Firefox automation against a Google Form:
+Launch the automation against a Google Form:
 
 ```bash
 ./jphw-x86_64-unknown-linux-gnu https://forms.gle/your-form-id
 ```
 
+Append `--firefox` to target Firefox instead of Chromium.
+
 The CLI will:
 
 1. Prompt for your email, class, student ID, and name on first run and store
    them under `~/.jphw/credentials.json`.
-2. Open Firefox (headless mode optional) and wait for the form to load.
+2. Launch Chromium (or Firefox when `--firefox` is supplied) and wait for the
+   form to load.
 3. Autofill known profile fields, request answers from the server in batches,
    and populate each question.
 4. Pause before navigating to the next page or submitting, giving you a chance
@@ -74,8 +79,9 @@ The CLI will:
 
 - `--server <url>` – override the API server (defaults to
   `https://zagori.crabdance.com`)
-- `--headless` – run Firefox without a window (useful on CI)
-- `--profile <dir>` – reuse an existing Firefox profile directory
+- `--headless` – run the browser without a window (useful on CI)
+- `--firefox` – switch the automation from Chromium to Firefox
+- `--profile <dir>` – reuse an existing browser profile directory
 
 ### Windows Tips
 

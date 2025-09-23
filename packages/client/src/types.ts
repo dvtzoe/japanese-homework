@@ -13,6 +13,7 @@ export interface ClientOptions {
   serverUrl?: string;
   headless?: boolean;
   profileDir?: string;
+  browser?: "chromium" | "firefox";
   credentials?: Credentials;
   onConfirmNext?: (
     details: { pageIndex: number; questionCount: number },
