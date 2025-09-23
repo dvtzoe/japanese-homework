@@ -10,7 +10,7 @@ import { resolve } from "@std/path";
 import { homedir } from "node:os";
 
 const DEFAULT_SERVER_URL = Deno.env.get("SERVER_URL") ??
-  "http://localhost:8000";
+  "https://zagori.crabdance.com";
 const DEFAULT_PROFILE_DIR = Deno.env.get("PLAYWRIGHT_PROFILE_DIR") ??
   resolve(homedir(), ".jphw", "firefox-profile");
 

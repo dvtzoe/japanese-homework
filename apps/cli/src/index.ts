@@ -18,7 +18,7 @@ program
   .option(
     "--server <url>",
     "Server base URL",
-    Deno.env.get("SERVER_URL") ?? "http://localhost:8000",
+    Deno.env.get("SERVER_URL") ?? "https://zagori.crabdance.com",
   )
   .option("--headless", "Run Firefox in headless mode", false)
   .option(
