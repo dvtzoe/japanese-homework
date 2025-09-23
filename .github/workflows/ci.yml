@@ -26,4 +26,4 @@ jobs:
 
       - name: Typecheck with Deno
         run: |
-          deno typecheck
+          deno check
