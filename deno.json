@@ -10,7 +10,8 @@
     "fmt": "deno fmt",
     "lint": "deno lint",
     "test": "deno test",
-    "check": "deno check"
+    "check": "deno check",
+    "ci": "deno fmt --check && deno lint && deno check"
   },
   "workspace": [
     "./apps/cli",
