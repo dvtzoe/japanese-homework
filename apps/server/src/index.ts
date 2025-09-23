@@ -198,7 +198,9 @@ async function handleBatchAnswers(request: Request): Promise<Response> {
   }
 
   try {
-    const answers = await Promise.all(parsed.map((question) => answerQuestion(question)));
+    const answers = await Promise.all(
+      parsed.map((question) => answerQuestion(question)),
+    );
     const payload: AnswerBatchResponse = { answers };
     return json(payload, { status: 200 });
   } catch (error) {
