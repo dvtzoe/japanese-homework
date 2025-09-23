@@ -34,7 +34,7 @@ and Windows.
 By default the CLI sends requests to the hosted server at
 `https://zagori.crabdance.com`, which already talks to OpenRouter and caches
 responses. If you prefer to self-host, start the bundled Deno server as shown
-below.
+below. The server supports HTTPS when provided with certificate paths.
 
 ```bash
 # macOS & Linux
@@ -50,6 +50,8 @@ Set the following environment variables before launching:
 - `PORT` (default `8000`)
 - `HOST` (default `0.0.0.0`)
 - `SERVER_URL` if you host the server elsewhere
+- `TLS_CERT_FILE` and `TLS_KEY_FILE` – absolute or relative paths to your TLS
+  certificate and private key to enable HTTPS
 
 The server persists cached answers in `apps/server/data/cache.json` so repeated
 questions return instantly.

@@ -10,6 +10,13 @@ import { PersistentCache } from "./cache.ts";
 import { OpenRouterClient } from "./openrouter.ts";
 
 const PORT = Number(Deno.env.get("PORT") ?? 8000);
+const HOSTNAME = Deno.env.get("HOST") ?? "0.0.0.0";
+
+const TLS_CERT_FILE = Deno.env.get("TLS_CERT_FILE");
+const TLS_KEY_FILE = Deno.env.get("TLS_KEY_FILE");
+
+const tlsEnabled = Boolean(TLS_CERT_FILE && TLS_KEY_FILE);
+
 const cache = new PersistentCache();
 await cache.init();
 
@@ -210,13 +217,41 @@ async function handleBatchAnswers(request: Request): Promise<Response> {
   }
 }
 
-Deno.serve({
+const serveOptionsBase = {
   port: PORT,
-  hostname: Deno.env.get("HOST") ?? "0.0.0.0",
-  onListen: ({ port, hostname }) => {
-    console.log(`Server listening on http://${hostname}:${port}`);
+  hostname: HOSTNAME,
+  onListen: ({ port, hostname }: { port: number; hostname: string }) => {
+    const protocol = tlsEnabled ? "https" : "http";
+    console.log(`Server listening on ${protocol}://${hostname}:${port}`);
   },
-}, async (request) => {
+} as const;
+
+let serveOptions:
+  | (typeof serveOptionsBase & { cert: string; key: string })
+  | typeof serveOptionsBase;
+
+if (tlsEnabled) {
+  try {
+    const [cert, key] = await Promise.all([
+      Deno.readTextFile(TLS_CERT_FILE!),
+      Deno.readTextFile(TLS_KEY_FILE!),
+    ]);
+    serveOptions = { ...serveOptionsBase, cert, key };
+  } catch (error) {
+    console.error("Failed to read TLS certificate or key:", error);
+    Deno.exit(1);
+  }
+} else {
+  serveOptions = serveOptionsBase;
+}
+
+if (!tlsEnabled && (TLS_CERT_FILE || TLS_KEY_FILE)) {
+  console.warn(
+    "Both TLS_CERT_FILE and TLS_KEY_FILE must be set to enable HTTPS; serving over HTTP instead.",
+  );
+}
+
+Deno.serve(serveOptions, async (request) => {
   const url = new URL(request.url);
 
   if (request.method === "OPTIONS") {
