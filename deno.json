@@ -6,6 +6,7 @@
     "start": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",
     "start:cli": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",
     "start:server": "deno run --allow-env --allow-net --allow-read --allow-write --allow-sys --env-file ./apps/server/src/index.ts",
+    "build:cli": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys scripts/build_cli.ts",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "test": "deno test",
