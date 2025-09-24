@@ -37,11 +37,9 @@ jobs:
       TARGET: ${{ matrix.target }}
       BUILD_VARIANT: ${{ matrix.withBrowser && 'with-browser' || 'bare' }}
       ARCHIVE_EXT: ${{ matrix.archive_ext }}
-      ARCHIVE_NAME: ${{ format('jphw-{0}-{1}.{2}', matrix.target, matrix.withBrowser && 'with-browser' || 'bare',
-matrix.archive_ext) }}
+      ARCHIVE_NAME: ${{ format('jphw-{0}-{1}.{2}', matrix.target, matrix.withBrowser && 'with-browser' || 'bare', matrix.archive_ext) }}
       BINARY_NAME: ${{ format('jphw-{0}{1}', matrix.target, contains(matrix.target, 'windows') && '.exe' || '') }}
-      PACKAGE_STAGING: ${{ format('package/jphw-{0}-{1}', matrix.target, matrix.withBrowser && 'with-browser' ||
-'bare') }}
+      PACKAGE_STAGING: ${{ format('package/jphw-{0}-{1}', matrix.target, matrix.withBrowser && 'with-browser' || 'bare') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
