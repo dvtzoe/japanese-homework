@@ -32,9 +32,9 @@ and Windows.
 ## 2. Start the Answer Server
 
 By default the CLI sends requests to the hosted server at
-`https://zagori.crabdance.com:8443`, which already talks to OpenRouter and caches
-responses. If you prefer to self-host, start the bundled Deno server as shown
-below. The server supports HTTPS when provided with certificate paths.
+`https://zagori.crabdance.com:8443`, which already talks to OpenRouter and
+caches responses. If you prefer to self-host, start the bundled Deno server as
+shown below. The server supports HTTPS when provided with certificate paths.
 
 ```bash
 # macOS & Linux
