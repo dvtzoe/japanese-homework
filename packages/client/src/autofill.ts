@@ -120,7 +120,7 @@ async function selectRadio(
   locator: Locator,
   answer: number,
 ): Promise<boolean> {
-  const option = locator.locator("input[type='radio']");
+  const option = locator.locator("[role='radio']");
   if (await option.count() > 0) {
     const index = answer - 1;
     if (index < 0) {
