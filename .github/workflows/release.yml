@@ -71,7 +71,7 @@ jobs:
 
       - name: Install bundled Chromium (Unix)
         if: matrix.withBrowser == true && runner.os != 'Windows'
-        run: deno run -A npm:playwright@1.55.0 install chromium
+        run: deno run -A npm:playwright@^1.55.0 install chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/${{ env.PACKAGE_STAGING }}/ms-playwright
 
@@ -81,7 +81,7 @@ jobs:
         run: |
           $browserPath = Join-Path (Join-Path $env:GITHUB_WORKSPACE $env:PACKAGE_STAGING) 'ms-playwright'
           $env:PLAYWRIGHT_BROWSERS_PATH = $browserPath
-          deno run -A npm:playwright@1.55.0 install chromium
+          deno run -A npm:playwright@^1.55.0 install chromium
 
       - name: Package artifact (Unix)
         if: runner.os != 'Windows'
