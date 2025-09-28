@@ -364,6 +364,7 @@
       },
       "packages/client": {
         "dependencies": [
+          "jsr:@std/fs@^1.0.19",
           "jsr:@std/path@^1.1.2",
           "npm:@types/node@^24.5.2",
           "npm:playwright@^1.55.0"

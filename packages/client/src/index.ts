@@ -1,5 +1,5 @@
 import { type BrowserContext, chromium, firefox } from "playwright";
-
+import handleBrowsers from "./browsers.ts";
 import { applyAnswer, autoFillQuestion, truncate } from "./autofill.ts";
 import { ensureProfileDir } from "./profile.ts";
 import { collectQuestions } from "./questions.ts";
@@ -26,10 +26,13 @@ export default async function client(options: ClientOptions): Promise<void> {
   const serverUrl = options.serverUrl ?? DEFAULT_SERVER_URL;
   const headless = options.headless ?? false;
   const browser = options.browser ?? DEFAULT_BROWSER;
-  const profileDirInput = options.profileDir ?? ENV_PROFILE_DIR ??
+  const profileDirInput = options.profileDir ??
+    ENV_PROFILE_DIR ??
     DEFAULT_PROFILE_DIRS[browser];
   const profileDir = await ensureProfileDir(profileDirInput);
   const credentials = options.credentials;
+
+  await handleBrowsers();
 
   let context: BrowserContext | null = null;
   try {
@@ -39,21 +42,10 @@ export default async function client(options: ClientOptions): Promise<void> {
         ? await firefox.launchPersistentContext(profileDir, { headless })
         : await chromium.launchPersistentContext(profileDir, { headless });
     } catch (error) {
-      try {
-        Deno.env.set(
-          "PLAYWRIGHT_BROWSERS_PATH",
-          resolve(import.meta.dirname as string, "ms-playwright"),
-        );
-        context = browser === "firefox"
-          ? await firefox.launchPersistentContext(profileDir, { headless })
-          : await chromium.launchPersistentContext(profileDir, { headless });
-      } catch {
-        console.error("Failed to launch browser with profile:", error);
-        console.error(
-          "Try running `npx playwright install` or `deno run -A npm:playright install` to install missing browsers.",
-        );
-        throw error;
-      }
+      console.error(
+        "Try running `npx playwright install` or `deno run -A npm:playright install` to install missing browsers.",
+      );
+      throw error;
     }
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
