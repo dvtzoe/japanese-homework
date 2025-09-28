@@ -65,6 +65,7 @@ program
         credentials,
         onConfirmNext: () => confirmPrompt("Go to the next page?"),
         onConfirmSubmit: () => confirmPrompt("Submit the form now?"),
+        onConfirmClose: () => confirmPrompt("Close the browser window?"),
       });
     } catch (error) {
       console.error("Failed to complete the form:", error);

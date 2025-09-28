@@ -21,6 +21,7 @@ export interface ClientOptions {
   onConfirmSubmit?: (
     details: { pageIndex: number; questionCount: number },
   ) => Promise<boolean>;
+  onConfirmClose?: () => Promise<boolean>;
 }
 
 export interface QuestionContext {

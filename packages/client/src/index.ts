@@ -134,6 +134,18 @@ export default async function client(options: ClientOptions): Promise<void> {
         await submitButton.first().click();
         await page.waitForLoadState("networkidle").catch(() => {});
         console.log("Form submitted.");
+
+        const close = options.onConfirmClose
+          ? await options.onConfirmClose()
+          : true;
+
+        if (close) {
+          console.log("Closing browser...");
+          break;
+        } else {
+          console.log("Leaving browser open per user request.");
+          return;
+        }
       }
 
       break;
