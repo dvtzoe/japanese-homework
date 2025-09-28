@@ -20,7 +20,8 @@ export class OpenRouterClient {
     }
     this.#apiKey = apiKey;
     this.#endpoint = options.endpoint ?? DEFAULT_ENDPOINT;
-    this.#model = options.model ?? DEFAULT_MODEL;
+    const model = Deno.env.get("OPENROUTER_MODEL");
+    this.#model = model ?? options.model ?? DEFAULT_MODEL;
   }
 
   async answer(
