@@ -6,7 +6,7 @@ import { collectQuestions } from "./questions.ts";
 import { requestAnswers } from "./server.ts";
 import type { ClientOptions, QuestionContext } from "./types.ts";
 export type { ClientOptions, Credentials } from "./types.ts";
-import { dirname, join, resolve } from "@std/path";
+import { resolve } from "@std/path";
 import { homedir } from "node:os";
 
 const DEFAULT_SERVER_URL = Deno.env.get("SERVER_URL") ??
@@ -16,101 +16,16 @@ const DEFAULT_BROWSER: "chromium" | "firefox" = "chromium";
 
 const ENV_PROFILE_DIR = Deno.env.get("PLAYWRIGHT_PROFILE_DIR");
 
-const PLAYWRIGHT_BROWSERS_PATH = "PLAYWRIGHT_BROWSERS_PATH";
-
 const DEFAULT_PROFILE_DIRS: Record<typeof DEFAULT_BROWSER | "firefox", string> =
   {
     chromium: resolve(homedir(), ".jphw", "chromium-profile"),
     firefox: resolve(homedir(), ".jphw", "firefox-profile"),
   };
 
-async function ensureBundledChromiumIfNeeded(): Promise<void> {
-  if (Deno.env.get(PLAYWRIGHT_BROWSERS_PATH)) {
-    return;
-  }
-
-  if (await hasInstalledChromium()) {
-    return;
-  }
-
-  const bundledRoot = await findBundledChromiumRoot();
-  if (!bundledRoot) {
-    return;
-  }
-
-  Deno.env.set(PLAYWRIGHT_BROWSERS_PATH, bundledRoot);
-  const nodeProcess = globalThis.process as
-    | { env?: Record<string, string | undefined> }
-    | undefined;
-  if (nodeProcess?.env) {
-    nodeProcess.env[PLAYWRIGHT_BROWSERS_PATH] = bundledRoot;
-  }
-  console.log(`Using bundled Chromium at ${bundledRoot}`);
-}
-
-async function hasInstalledChromium(): Promise<boolean> {
-  try {
-    const executable = chromium.executablePath();
-    if (!executable) {
-      return false;
-    }
-    await Deno.stat(executable);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function findBundledChromiumRoot(): Promise<string | null> {
-  const candidateRoots = new Set<string>();
-  const execPath = Deno.execPath();
-  const execDir = dirname(execPath);
-  candidateRoots.add(join(execDir, "ms-playwright"));
-
-  try {
-    const realExecDir = dirname(await Deno.realPath(execPath));
-    candidateRoots.add(join(realExecDir, "ms-playwright"));
-  } catch {
-    // Ignore failure to resolve real path
-  }
-
-  const parentDir = dirname(execDir);
-  if (parentDir !== execDir) {
-    candidateRoots.add(join(parentDir, "ms-playwright"));
-  }
-
-  candidateRoots.add(resolve(Deno.cwd(), "ms-playwright"));
-
-  for (const candidate of candidateRoots) {
-    if (await hasChromiumInstall(candidate)) {
-      return candidate;
-    }
-  }
-
-  return null;
-}
-
-async function hasChromiumInstall(root: string): Promise<boolean> {
-  try {
-    for await (const entry of Deno.readDir(root)) {
-      if (entry.isDirectory && entry.name.startsWith("chromium-")) {
-        return true;
-      }
-    }
-  } catch {
-    return false;
-  }
-
-  return false;
-}
-
 export default async function client(options: ClientOptions): Promise<void> {
   const serverUrl = options.serverUrl ?? DEFAULT_SERVER_URL;
   const headless = options.headless ?? false;
   const browser = options.browser ?? DEFAULT_BROWSER;
-  if (browser === "chromium") {
-    await ensureBundledChromiumIfNeeded();
-  }
   const profileDirInput = options.profileDir ?? ENV_PROFILE_DIR ??
     DEFAULT_PROFILE_DIRS[browser];
   const profileDir = await ensureProfileDir(profileDirInput);
@@ -124,11 +39,21 @@ export default async function client(options: ClientOptions): Promise<void> {
         ? await firefox.launchPersistentContext(profileDir, { headless })
         : await chromium.launchPersistentContext(profileDir, { headless });
     } catch (error) {
-      console.error("Failed to launch browser with profile:", error);
-      console.error(
-        "Try running `npx playwright install` to install missing browsers.",
-      );
-      throw error;
+      try {
+        Deno.env.set(
+          "PLAYWRIGHT_BROWSERS_PATH",
+          resolve(import.meta.dirname as string, "ms-playwright"),
+        );
+        context = browser === "firefox"
+          ? await firefox.launchPersistentContext(profileDir, { headless })
+          : await chromium.launchPersistentContext(profileDir, { headless });
+      } catch {
+        console.error("Failed to launch browser with profile:", error);
+        console.error(
+          "Try running `npx playwright install` or `deno run -A npm:playright install` to install missing browsers.",
+        );
+        throw error;
+      }
     }
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
