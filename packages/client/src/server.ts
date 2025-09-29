@@ -16,7 +16,7 @@ export async function requestAnswers(
     return [];
   }
 
-  const response = await fetch(`${normalizeBaseUrl(serverUrl)}/jphw/answers`, {
+  const response = await fetch(`${normalizeBaseUrl(serverUrl)}/answers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

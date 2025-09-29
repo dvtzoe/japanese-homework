@@ -261,16 +261,16 @@ Deno.serve(serveOptions, async (request) => {
     });
   }
 
-  if (request.method === "GET" && url.pathname === "/jphw/health") {
+  if (request.method === "GET" && url.pathname === "/healthz") {
     return json({ status: "ok" }, { headers: corsHeaders() });
   }
 
-  if (request.method === "POST" && url.pathname === "/jphw/answers") {
+  if (request.method === "POST" && url.pathname === "/answers") {
     const response = await handleBatchAnswers(request);
     return withCors(response);
   }
 
-  if (request.method === "POST" && url.pathname === "/jphw/answer") {
+  if (request.method === "POST" && url.pathname === "/answer") {
     const response = await handleAnswer(request);
     return withCors(response);
   }
