@@ -32,7 +32,7 @@ export default async (): Promise<void> => {
     if (
       error instanceof Deno.errors.NotFound
     ) {
-      console.debug("Default Playwright browsers directory not found.");
+      console.log("Default Playwright browsers directory not found.");
       try {
         await Deno.lstat(BUNDLED_PLAYWRIGHT_BROWSERS_PATH);
         console.log(
