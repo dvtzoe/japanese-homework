@@ -4,7 +4,7 @@
 
 ## Installation
 
-### Precompiled binary (Recommended)
+### Precompiled binary
 
 1. Visit the latest GitHub Release for this repository.
 2. Download the binary that matches your platform and ends with `-with-browser`
@@ -16,7 +16,7 @@
 3. Extracts the file
 4. Execute the executable
 
-### Mannual
+### Manual (Recommended)
 
 #### Prerequisite
 
