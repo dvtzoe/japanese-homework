@@ -44,8 +44,13 @@ export default async function client(options: ClientOptions): Promise<void> {
     console.log(`Using ${browser} profile at ${profileDir}`);
     try {
       context = browser === "firefox"
-        ? await firefox.launchPersistentContext(profileDir, { headless })
-        : await chromium.launchPersistentContext(profileDir, { headless });
+        ? await firefox.launchPersistentContext(profileDir, {
+          headless,
+        })
+        : await chromium.launchPersistentContext(profileDir, {
+          headless,
+          args: ["--disable-blink-features=AutomationControlled"],
+        });
     } catch (error) {
       console.error(
         "Try running `npx playwright install` or `deno run -A npm:playright install` to install missing browsers.",
