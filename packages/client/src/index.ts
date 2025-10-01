@@ -15,7 +15,7 @@ import { resolve } from "@std/path";
 import { homedir } from "node:os";
 
 const DEFAULT_SERVER_URL = Deno.env.get("SERVER_URL") ??
-  "https://zagori.crabdance.com:8443";
+  "https://jphw.crabdance.com";
 
 const DEFAULT_BROWSER: "chromium" | "firefox" = "chromium";
 

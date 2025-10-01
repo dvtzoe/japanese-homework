@@ -55,7 +55,7 @@ deno start:cli
 ## 2. Start the Answer Server
 
 By default the CLI sends requests to the hosted server at
-`https://zagori.crabdance.com:8443`, which already talks to OpenRouter and
+`https://jphw.crabdance.com`, which already talks to OpenRouter and
 caches responses. If you prefer to self-host, start the bundled Deno server as
 shown below. The server supports HTTPS when provided with certificate paths.
 
@@ -77,7 +77,7 @@ questions return instantly.
 ### Options
 
 - `--server <url>` – override the API server (defaults to
-  `https://zagori.crabdance.com:8443`)
+  `https://jphw.crabdance.com`)
 - `--headless` – run the browser without a window (useful on CI)
 - `--firefox` – switch the automation from Chromium to Firefox
 - `--profile <dir>` – reuse an existing browser profile directory
