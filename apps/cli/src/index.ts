@@ -45,6 +45,11 @@ program.parse();
 
 const options = program.opts();
 
+const urlArg = program.args[0];
+if (urlArg) {
+  options.url = urlArg;
+}
+
 let targetUrl = options.url;
 if (!targetUrl) {
   const answers = await inquirer.prompt<{ url: string }>([
