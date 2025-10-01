@@ -158,12 +158,19 @@ export default async function client(options: ClientOptions): Promise<void> {
 
       if (await viewScoreButton.count()) {
         console.log("Detected 'View Score' button, clicking it...");
-        await viewScoreButton.first().click();
-        await page.waitForLoadState("networkidle").catch(() => {});
+        const [newPage] = await Promise.all([
+          context.waitForEvent("page").catch(() => null),
+          viewScoreButton.first().click(),
+        ]);
+        if (!newPage) {
+          console.warn("Failed to open the score page.");
+          break;
+        }
+        await newPage.waitForLoadState("networkidle").catch(() => {});
         if (options.screenshotPath) {
           ensureDir(options.screenshotPath).catch(() => {});
         }
-        await page.screenshot({
+        await newPage.screenshot({
           path: options.screenshotPath
             ? resolve(options.screenshotPath, `${Date.now()}.png`)
             : resolve(homedir(), ".jphw", "screenshot", `${Date.now()}.png`),
