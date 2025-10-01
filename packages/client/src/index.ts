@@ -13,6 +13,7 @@ import type { ClientOptions, QuestionContext } from "./types.ts";
 export type { ClientOptions, Credentials } from "./types.ts";
 import { resolve } from "@std/path";
 import { homedir } from "node:os";
+import { ensureDir } from "@std/fs";
 
 const DEFAULT_SERVER_URL = Deno.env.get("SERVER_URL") ??
   "https://jphw.crabdance.com";
@@ -128,6 +129,7 @@ export default async function client(options: ClientOptions): Promise<void> {
       }
 
       const submitButton = page.getByRole("button", { name: /submit/i });
+
       if (await submitButton.count()) {
         const proceed = options.onConfirmSubmit
           ? await options.onConfirmSubmit({
@@ -145,21 +147,40 @@ export default async function client(options: ClientOptions): Promise<void> {
         await submitButton.first().click();
         await page.waitForLoadState("networkidle").catch(() => {});
         console.log("Form submitted.");
-
-        const close = options.onConfirmClose
-          ? await options.onConfirmClose()
-          : true;
-
-        if (close) {
-          console.log("Closing browser...");
-          break;
-        } else {
-          console.log("Leaving browser open per user request.");
-          return;
-        }
       }
 
-      break;
+      await page.waitForSelector("text=Your response has been recorded").catch(
+        () => {},
+      );
+      await page.waitForLoadState("networkidle").catch(() => {});
+
+      const viewScoreButton = page.locator('[aria-label="View score"]');
+
+      if (await viewScoreButton.count()) {
+        console.log("Detected 'View Score' button, clicking it...");
+        await viewScoreButton.first().click();
+        await page.waitForLoadState("networkidle").catch(() => {});
+        if (options.screenshotPath) {
+          ensureDir(options.screenshotPath).catch(() => {});
+        }
+        await page.screenshot({
+          path: options.screenshotPath
+            ? resolve(options.screenshotPath, `${Date.now()}.png`)
+            : resolve(homedir(), ".jphw", "screenshot", `${Date.now()}.png`),
+        });
+      }
+
+      const close = options.onConfirmClose
+        ? await options.onConfirmClose()
+        : true;
+
+      if (close) {
+        console.log("Closing browser...");
+        break;
+      } else {
+        console.log("Leaving browser open per user request.");
+        return;
+      }
     }
   } finally {
     await context?.close();

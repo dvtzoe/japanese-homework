@@ -35,6 +35,10 @@ program
     "-Y, --yes-all",
     "Skip all confirmation prompts including submission",
     false,
+  )
+  .option(
+    "--screenshot <path>",
+    "Take a screenshot after submission and save to the given path",
   );
 
 program.parse();
@@ -78,6 +82,7 @@ try {
     onConfirmClose: options.yesAll
       ? () => Promise.resolve(true)
       : () => confirmPrompt("Close the browser?"),
+    screenshotPath: options.screenshot ? options.screenshot.trim() : undefined,
   });
 } catch (error) {
   console.error("Failed to complete the form:", error);

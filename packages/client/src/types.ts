@@ -22,6 +22,7 @@ export interface ClientOptions {
     details: { pageIndex: number; questionCount: number },
   ) => Promise<boolean>;
   onConfirmClose?: () => Promise<boolean>;
+  screenshotPath?: string;
 }
 
 export interface QuestionContext {
