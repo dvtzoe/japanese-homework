@@ -26,54 +26,63 @@ program
     "--profile <dir>",
     "Persistent browser profile directory",
   )
-  .action(async (
-    url: string | undefined,
-    options: {
-      server: string;
-      headless?: boolean;
-      firefox?: boolean;
-      profile?: string;
+  .option(
+    "-y, --yes",
+    "Skip confirmation prompts except submission",
+    false,
+  )
+  .option(
+    "-Y, --yes-all",
+    "Skip all confirmation prompts including submission",
+    false,
+  );
+
+program.parse();
+
+const options = program.opts();
+
+let targetUrl = options.url;
+if (!targetUrl) {
+  const answers = await inquirer.prompt<{ url: string }>([
+    {
+      type: "input",
+      name: "url",
+      message: "Please enter the URL of the form:",
     },
-  ) => {
-    let targetUrl = url;
-    if (!targetUrl) {
-      const answers = await inquirer.prompt<{ url: string }>([
-        {
-          type: "input",
-          name: "url",
-          message: "Please enter the URL of the form:",
-        },
-      ]);
-      targetUrl = answers.url;
-    }
+  ]);
+  targetUrl = answers.url;
+}
 
-    if (!targetUrl) {
-      console.error("A Google Form URL is required.");
-      Deno.exit(1);
-    }
+if (!targetUrl) {
+  console.error("A Google Form URL is required.");
+  Deno.exit(1);
+}
 
-    const trimmedUrl = targetUrl.trim();
-    const credentials = await loadCredentials();
+const trimmedUrl = targetUrl.trim();
+const credentials = await loadCredentials();
 
-    try {
-      await client({
-        url: trimmedUrl,
-        serverUrl: options.server,
-        headless: Boolean(options.headless),
-        browser: options.firefox ? "firefox" : "chromium",
-        profileDir: options.profile,
-        credentials,
-        onConfirmNext: () => confirmPrompt("Go to the next page?"),
-        onConfirmSubmit: () => confirmPrompt("Submit the form now?"),
-        onConfirmClose: () => confirmPrompt("Close the browser window?"),
-      });
-    } catch (error) {
-      console.error("Failed to complete the form:", error);
-      Deno.exit(1);
-    }
+try {
+  await client({
+    url: trimmedUrl,
+    serverUrl: options.server,
+    headless: Boolean(options.headless),
+    browser: options.firefox ? "firefox" : "chromium",
+    profileDir: options.profile,
+    credentials,
+    onConfirmNext: options.yes || options.yesAll
+      ? () => Promise.resolve(true)
+      : () => confirmPrompt("Proceed to the next page?"),
+    onConfirmSubmit: options.yes || options.yesAll
+      ? () => Promise.resolve(true)
+      : () => confirmPrompt("Submit the form?"),
+    onConfirmClose: options.yesAll
+      ? () => Promise.resolve(true)
+      : () => confirmPrompt("Close the browser?"),
   });
-
-await program.parseAsync(Deno.args);
+} catch (error) {
+  console.error("Failed to complete the form:", error);
+  Deno.exit(1);
+}
 
 async function confirmPrompt(message: string): Promise<boolean> {
   const { proceed } = await inquirer.prompt<{ proceed: boolean }>([
