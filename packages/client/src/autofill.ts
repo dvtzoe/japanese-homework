@@ -1,4 +1,4 @@
-import type { Locator } from "playwright";
+import type { Locator, Page } from "playwright";
 
 import type { QuestionPayload } from "@jphw/types";
 
@@ -23,7 +23,6 @@ export async function autoFillQuestion(
   ) {
     let handled = false;
     handled = (await fillText(locator, credentials.email)) || handled;
-    handled = (await toggleEmailOptions(locator)) || handled;
     if (handled) {
       console.log("Auto-filled email field");
       return true;
@@ -192,9 +191,9 @@ function matchesChoices(
   return choices.some((choice) => matchesKeyword(choice, keywords));
 }
 
-async function toggleEmailOptions(locator: Locator): Promise<boolean> {
+export async function toggleEmailOptions(page: Page): Promise<boolean> {
   let handled = false;
-  const checkboxes = locator.getByRole("checkbox");
+  const checkboxes = page.locator('[role="checkbox"]');
   const checkboxCount = await checkboxes.count();
   for (let index = 0; index < checkboxCount; index += 1) {
     const checkbox = checkboxes.nth(index);
@@ -203,18 +202,6 @@ async function toggleEmailOptions(locator: Locator): Promise<boolean> {
       await checkbox.click({ force: true });
     }
     handled = true;
-  }
-
-  const radios = locator.getByRole("radio");
-  const radioCount = await radios.count();
-  for (let index = 0; index < radioCount; index += 1) {
-    const radio = radios.nth(index);
-    const label = await radio.innerText();
-    if (matchesKeyword(label, EMAIL_KEYWORDS)) {
-      await radio.click({ force: true });
-      handled = true;
-      break;
-    }
   }
 
   return handled;

@@ -1,6 +1,11 @@
 import { type BrowserContext, chromium, firefox } from "playwright";
 import handleBrowsers from "./browsers.ts";
-import { applyAnswer, autoFillQuestion, truncate } from "./autofill.ts";
+import {
+  applyAnswer,
+  autoFillQuestion,
+  toggleEmailOptions,
+  truncate,
+} from "./autofill.ts";
 import { ensureProfileDir } from "./profile.ts";
 import { collectQuestions } from "./questions.ts";
 import { requestAnswers } from "./server.ts";
@@ -56,6 +61,7 @@ export default async function client(options: ClientOptions): Promise<void> {
     let pageIndex = 0;
 
     while (true) {
+      await toggleEmailOptions(page);
       const questions = await collectQuestions(page);
       console.log(
         `Detected ${questions.length} questions on page ${pageIndex + 1}`,
