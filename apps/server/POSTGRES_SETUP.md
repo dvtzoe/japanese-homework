@@ -76,7 +76,7 @@ npx prisma generate
 This will create the Prisma client that the server code uses. The client is
 automatically configured to work with Deno.
 
-**Note:** The server's `deno.json` has `"nodeModulesDir": "auto"` which enables
+**Note:** The workspace root `deno.json` has `"nodeModulesDir": "auto"` which enables
 npm package lifecycle scripts required by Prisma.
 
 ### 5. Run Database Migrations
