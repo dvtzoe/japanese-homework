@@ -61,7 +61,7 @@ below. The server supports HTTPS when provided with certificate paths.
 
 **Note:** The server now uses PostgreSQL for caching instead of JSON files. See
 [apps/server/POSTGRES_SETUP.md](apps/server/POSTGRES_SETUP.md) for detailed
-setup instructions.
+setup instructions. The table will be created automatically on first run.
 
 ```sh
 deno task start:server
@@ -70,7 +70,7 @@ deno task start:server
 Set the following environment variables before launching:
 
 - `DATABASE_URL` – required, PostgreSQL connection string (e.g.,
-  `postgresql://user:password@localhost:5432/jphw`)
+  `******localhost:5432/jphw`)
 - `OPENROUTER_API_KEY` – required
 - `OPENROUTER_MODEL` - The llm model that will be used
 - `PORT` (default `8000`)
@@ -78,7 +78,7 @@ Set the following environment variables before launching:
   certificate and private key to enable HTTPS
 
 The server persists cached answers in a PostgreSQL database so repeated
-questions return instantly.
+questions return instantly. The cache table is created automatically on startup.
 
 ### Options
 

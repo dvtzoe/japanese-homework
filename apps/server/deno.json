@@ -11,6 +11,6 @@
   "imports": {
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
-    "@prisma/client": "npm:@prisma/client@^6.1.0"
+    "pg": "npm:pg@^8.11.0"
   }
 }

@@ -1,11 +1,7 @@
 .env
 
 apps/server/data/
-apps/server/generated/
-apps/server/node_modules/
 
 dist/
 
-# Prisma
-apps/server/prisma/migrations/
 node_modules/
