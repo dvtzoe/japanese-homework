@@ -2,7 +2,6 @@
   "name": "@jphw/server",
   "description": "Server for JPHW",
   "version": "0.0.0",
-  "nodeModulesDir": "auto",
   "exports": {
     ".": "./src/index.ts"
   },

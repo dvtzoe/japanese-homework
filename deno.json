@@ -1,4 +1,5 @@
 {
+  "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run --watch --allow-env --allow-net --allow-read --allow-write --allow-sys --env-file ./apps/server/src/index.ts",
     "dev:cli": "deno run --watch --allow-env --allow-net --allow-read --allow-write --allow-run --allow-sys --env-file ./apps/cli/src/index.ts",

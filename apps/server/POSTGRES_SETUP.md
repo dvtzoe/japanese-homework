@@ -1,13 +1,15 @@
 # PostgreSQL Setup Guide
 
-This guide explains how to set up the server with PostgreSQL database for caching.
+This guide explains how to set up the server with PostgreSQL database for
+caching.
 
 ## Prerequisites
 
 1. **PostgreSQL Database**: You need a running PostgreSQL instance. You can:
    - Install PostgreSQL locally
    - Use a hosted service (e.g., Supabase, Neon, Railway, or AWS RDS)
-   - Use Docker: `docker run --name jphw-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
+   - Use Docker:
+     `docker run --name jphw-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
 
 2. **Deno**: Ensure you have Deno installed (see main README)
 
@@ -17,18 +19,21 @@ This guide explains how to set up the server with PostgreSQL database for cachin
 
 ### 1. Configure Database Connection
 
-Create a `.env` file in the `apps/server` directory with your database connection string:
+Create a `.env` file in the `apps/server` directory with your database
+connection string:
 
 ```bash
 DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
 ```
 
 For example, with default local PostgreSQL:
+
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jphw"
 ```
 
 **Important Environment Variables:**
+
 - `DATABASE_URL` (required): PostgreSQL connection string
 - `OPENROUTER_API_KEY` (required): Your OpenRouter API key
 - `OPENROUTER_MODEL` (optional): The LLM model to use
@@ -38,7 +43,9 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jphw"
 
 ### 2. Install Dependencies
 
-The server uses Prisma with Deno's npm compatibility. Deno will automatically install dependencies when you run the server, but you need to allow npm lifecycle scripts:
+The server uses Prisma with Deno's npm compatibility. Deno will automatically
+install dependencies when you run the server, but you need to allow npm
+lifecycle scripts:
 
 ```bash
 cd apps/server
@@ -52,6 +59,7 @@ npm install -g prisma
 ```
 
 Or use it via npx without installing:
+
 ```bash
 npx prisma --version
 ```
@@ -65,9 +73,11 @@ cd apps/server
 npx prisma generate
 ```
 
-This will create the Prisma client that the server code uses. The client is automatically configured to work with Deno.
+This will create the Prisma client that the server code uses. The client is
+automatically configured to work with Deno.
 
-**Note:** The server's `deno.json` has `"nodeModulesDir": "auto"` which enables npm package lifecycle scripts required by Prisma.
+**Note:** The server's `deno.json` has `"nodeModulesDir": "auto"` which enables
+npm package lifecycle scripts required by Prisma.
 
 ### 5. Run Database Migrations
 
@@ -79,10 +89,12 @@ npx prisma migrate dev --name init
 ```
 
 This will:
+
 - Create the `cache_entries` table in your PostgreSQL database
 - Apply all necessary migrations
 
 For production, use:
+
 ```bash
 npx prisma migrate deploy
 ```
@@ -180,15 +192,16 @@ If you get "Cannot find module '@prisma/client'":
 
 ## Migration from JSON Cache
 
-The new implementation doesn't automatically migrate existing JSON cache data. If you have important cached data, you can manually migrate it:
+The new implementation doesn't automatically migrate existing JSON cache data.
+If you have important cached data, you can manually migrate it:
 
 1. Export from JSON (if you have the old `data/cache.json`):
    ```bash
    cat apps/server/data/cache.json | jq -r 'to_entries[] | "\(.key)\t\(.value.answer)"'
    ```
 
-2. Import to PostgreSQL:
-   Create a script or manually insert the entries using Prisma Studio or SQL:
+2. Import to PostgreSQL: Create a script or manually insert the entries using
+   Prisma Studio or SQL:
    ```sql
    INSERT INTO cache_entries (id, answer, "createdAt", "updatedAt")
    VALUES ('key_hash', 'answer_text', NOW(), NOW());
@@ -197,11 +210,13 @@ The new implementation doesn't automatically migrate existing JSON cache data. I
 ## Development vs Production
 
 ### Development
+
 - Use `npx prisma migrate dev` to create and apply migrations
 - Prisma Studio is useful for debugging
 - Connection pooling is handled automatically
 
 ### Production
+
 - Use `npx prisma migrate deploy` to apply migrations
 - Set `DATABASE_URL` to use connection pooling (e.g., PgBouncer)
 - Consider using a managed PostgreSQL service
@@ -217,12 +232,14 @@ The new implementation doesn't automatically migrate existing JSON cache data. I
 ## Hosted PostgreSQL Options
 
 ### Free Tier Options:
+
 - **Supabase**: Free tier with 500MB database
 - **Neon**: Serverless PostgreSQL with generous free tier
 - **Railway**: $5/month credit, easy setup
 - **ElephantSQL**: Free tier available
 
 ### Example with Supabase:
+
 1. Create a project at https://supabase.com
 2. Go to Settings > Database
 3. Copy the connection string (Transaction mode)
