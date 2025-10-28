@@ -8,6 +8,7 @@ import type {
 
 import { PersistentCache } from "./cache.ts";
 import { OpenRouterClient } from "./openrouter.ts";
+import { hashImagesFromUrls } from "./image_hash.ts";
 
 const PORT = Number(Deno.env.get("PORT") ?? 8000);
 const HOSTNAME = Deno.env.get("HOST") ?? "0.0.0.0";
@@ -161,11 +162,13 @@ function parseBatchRequest(payload: unknown): QuestionPayload[] {
 }
 
 async function answerQuestion(question: QuestionPayload): Promise<string> {
-  // Try to find cached answer using question details
-  const imageUrl = question.imageUrls.length > 0
-    ? question.imageUrls[0]
+  // Hash images if present
+  const imageHash = question.imageUrls.length > 0
+    ? await hashImagesFromUrls(question.imageUrls)
     : undefined;
-  const cached = await cache.get(question.text, imageUrl, question.choices);
+
+  // Try to find cached answer using question details
+  const cached = await cache.get(question.text, imageHash, question.choices);
   if (cached) {
     return cached.answer;
   }
@@ -178,7 +181,7 @@ async function answerQuestion(question: QuestionPayload): Promise<string> {
     answer: result.answer,
     answer_index: result.answerIndex,
     question: question.text,
-    image_url: imageUrl,
+    image_hash: imageHash,
     extracted_text: result.extractedText,
     choices: question.choices,
   });
@@ -234,7 +237,7 @@ async function handleSearch(request: Request): Promise<Response> {
   try {
     const url = new URL(request.url);
     const question = url.searchParams.get("question") ?? undefined;
-    const imageUrl = url.searchParams.get("image_url") ?? undefined;
+    const imageHash = url.searchParams.get("image_hash") ?? undefined;
     const choicesParam = url.searchParams.get("choices");
     const choices = choicesParam ? JSON.parse(choicesParam) : undefined;
     const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
@@ -242,7 +245,7 @@ async function handleSearch(request: Request): Promise<Response> {
 
     const results = await cache.search({
       question,
-      image_url: imageUrl,
+      image_hash: imageHash,
       choices,
       limit,
       offset,

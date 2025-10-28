@@ -6,14 +6,14 @@ export interface CacheEntry {
   answer: string;
   answer_index?: number;
   question?: string;
-  image_url?: string;
+  image_hash?: string;
   extracted_text?: string;
   choices?: string[];
 }
 
 export interface SearchFilters {
   question?: string;
-  image_url?: string;
+  image_hash?: string;
   choices?: string[];
   limit?: number;
   offset?: number;
@@ -43,7 +43,7 @@ export class PersistentCache {
             answer TEXT NOT NULL,
             answer_index INTEGER,
             question TEXT,
-            image_url TEXT,
+            image_hash TEXT,
             extracted_text TEXT,
             choices TEXT[],
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -57,8 +57,8 @@ export class PersistentCache {
           ON cache_entries USING gin(to_tsvector('english', COALESCE(question, '')))
         `);
         await client.query(`
-          CREATE INDEX IF NOT EXISTS idx_cache_entries_image_url 
-          ON cache_entries (image_url)
+          CREATE INDEX IF NOT EXISTS idx_cache_entries_image_hash 
+          ON cache_entries (image_hash)
         `);
         await client.query(`
           CREATE INDEX IF NOT EXISTS idx_cache_entries_choices 
@@ -77,7 +77,7 @@ export class PersistentCache {
 
   async get(
     question?: string,
-    imageUrl?: string,
+    imageHash?: string,
     choices?: string[],
   ): Promise<CacheEntry | undefined> {
     // Build dynamic query based on available parameters
@@ -90,9 +90,9 @@ export class PersistentCache {
       params.push(question);
     }
 
-    if (imageUrl) {
-      conditions.push(`image_url = $${paramIndex++}`);
-      params.push(imageUrl);
+    if (imageHash) {
+      conditions.push(`image_hash = $${paramIndex++}`);
+      params.push(imageHash);
     }
 
     if (choices && choices.length > 0) {
@@ -105,7 +105,7 @@ export class PersistentCache {
     }
 
     const query = `
-      SELECT answer, answer_index, question, image_url, extracted_text, choices
+      SELECT answer, answer_index, question, image_hash, extracted_text, choices
       FROM cache_entries
       WHERE ${conditions.join(" AND ")}
       LIMIT 1
@@ -121,7 +121,7 @@ export class PersistentCache {
       answer: row.answer,
       answer_index: row.answer_index,
       question: row.question,
-      image_url: row.image_url,
+      image_hash: row.image_hash,
       extracted_text: row.extracted_text,
       choices: row.choices,
     };
@@ -139,9 +139,9 @@ export class PersistentCache {
       params.push(filters.question);
     }
 
-    if (filters.image_url) {
-      conditions.push(`image_url = $${paramIndex++}`);
-      params.push(filters.image_url);
+    if (filters.image_hash) {
+      conditions.push(`image_hash = $${paramIndex++}`);
+      params.push(filters.image_hash);
     }
 
     if (filters.choices && filters.choices.length > 0) {
@@ -157,7 +157,7 @@ export class PersistentCache {
     const offset = filters.offset ?? 0;
 
     const query = `
-      SELECT id, answer, answer_index, question, image_url, extracted_text, choices, created_at, updated_at
+      SELECT id, answer, answer_index, question, image_hash, extracted_text, choices, created_at, updated_at
       FROM cache_entries
       ${whereClause}
       ORDER BY created_at DESC
@@ -173,14 +173,14 @@ export class PersistentCache {
         answer: string;
         answer_index: number;
         question: string;
-        image_url: string;
+        image_hash: string;
         extracted_text: string;
         choices: string[];
       }) => ({
         answer: row.answer,
         answer_index: row.answer_index,
         question: row.question,
-        image_url: row.image_url,
+        image_hash: row.image_hash,
         extracted_text: row.extracted_text,
         choices: row.choices,
       }),
@@ -189,7 +189,7 @@ export class PersistentCache {
 
   async entries(): Promise<Array<[string, CacheEntry]>> {
     const result = await this.#pool.query(
-      "SELECT id, answer, answer_index, question, image_url, extracted_text, choices FROM cache_entries",
+      "SELECT id, answer, answer_index, question, image_hash, extracted_text, choices FROM cache_entries",
     );
     return result.rows.map(
       (row: {
@@ -197,7 +197,7 @@ export class PersistentCache {
         answer: string;
         answer_index: number;
         question: string;
-        image_url: string;
+        image_hash: string;
         extracted_text: string;
         choices: string[];
       }) => [
@@ -206,7 +206,7 @@ export class PersistentCache {
           answer: row.answer,
           answer_index: row.answer_index,
           question: row.question,
-          image_url: row.image_url,
+          image_hash: row.image_hash,
           extracted_text: row.extracted_text,
           choices: row.choices,
         },
@@ -216,14 +216,14 @@ export class PersistentCache {
 
   async set(entry: CacheEntry) {
     await this.#pool.query(
-      `INSERT INTO cache_entries (answer, answer_index, question, image_url, extracted_text, choices, updated_at)
+      `INSERT INTO cache_entries (answer, answer_index, question, image_hash, extracted_text, choices, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
        RETURNING id`,
       [
         entry.answer,
         entry.answer_index ?? null,
         entry.question ?? null,
-        entry.image_url ?? null,
+        entry.image_hash ?? null,
         entry.extracted_text ?? null,
         entry.choices ?? null,
       ],

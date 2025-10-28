@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS cache_entries (
   answer TEXT NOT NULL,
   answer_index INTEGER,
   question TEXT,
-  image_url TEXT,
+  image_hash TEXT,
   extracted_text TEXT,
   choices TEXT[],
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,24 +81,24 @@ CREATE TABLE IF NOT EXISTS cache_entries (
 The server also creates indexes for efficient searching:
 
 - Full-text search index on `question`
-- Index on `image_url`
+- Index on `image_hash`
 - GIN index on `choices` array
 
 ## Database Schema
 
 The cache stores detailed information about each question and answer:
 
-| Column           | Type      | Description                                                  |
-| ---------------- | --------- | ------------------------------------------------------------ |
-| `id`             | SERIAL    | Primary key - auto-incrementing ID                           |
-| `answer`         | TEXT      | The answer provided by the LLM                               |
-| `answer_index`   | INTEGER   | Index of the selected choice (for multiple choice questions) |
-| `question`       | TEXT      | The question text                                            |
-| `image_url`      | TEXT      | URL of the first image associated with the question          |
-| `extracted_text` | TEXT      | Text extracted from images (if image contains only text)     |
-| `choices`        | TEXT[]    | Array of answer choices (for multiple choice questions)      |
-| `created_at`     | TIMESTAMP | When the entry was created                                   |
-| `updated_at`     | TIMESTAMP | When the entry was last updated                              |
+| Column           | Type      | Description                                                                        |
+| ---------------- | --------- | ---------------------------------------------------------------------------------- |
+| `id`             | SERIAL    | Primary key - auto-incrementing ID                                                 |
+| `answer`         | TEXT      | The answer provided by the LLM                                                     |
+| `answer_index`   | INTEGER   | Index of the selected choice (for multiple choice questions)                       |
+| `question`       | TEXT      | The question text                                                                  |
+| `image_hash`     | TEXT      | SHA-256 hash of the image content (prevents duplicate entries from temporary URLs) |
+| `extracted_text` | TEXT      | Text extracted from images (if image contains only text)                           |
+| `choices`        | TEXT[]    | Array of answer choices (for multiple choice questions)                            |
+| `created_at`     | TIMESTAMP | When the entry was created                                                         |
+| `updated_at`     | TIMESTAMP | When the entry was last updated                                                    |
 
 ## API Endpoints
 
@@ -109,7 +109,7 @@ Search the cache for questions and answers.
 **Query Parameters:**
 
 - `question` (optional): Full-text search on question text
-- `image_url` (optional): Exact match on image URL
+- `image_hash` (optional): Exact match on image hash
 - `choices` (optional): JSON array of choices to match
 - `limit` (optional, default: 50): Maximum number of results
 - `offset` (optional, default: 0): Pagination offset
@@ -118,7 +118,7 @@ Search the cache for questions and answers.
 
 ```bash
 curl "http://localhost:8000/search?question=grammar&limit=10"
-curl "http://localhost:8000/search?image_url=https://example.com/image.jpg"
+curl "http://localhost:8000/search?image_hash=abc123def456..."
 ```
 
 **Response:**
@@ -130,7 +130,7 @@ curl "http://localhost:8000/search?image_url=https://example.com/image.jpg"
       "answer": "2",
       "answer_index": 2,
       "question": "What is the correct grammar?",
-      "image_url": "https://example.com/image.jpg",
+      "image_hash": "abc123def456789...",
       "extracted_text": "Some text from image",
       "choices": ["Choice 1", "Choice 2", "Choice 3"]
     }
