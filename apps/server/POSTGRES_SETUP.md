@@ -36,7 +36,16 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jphw"
 - `TLS_CERT_FILE` (optional): Path to TLS certificate for HTTPS
 - `TLS_KEY_FILE` (optional): Path to TLS private key for HTTPS
 
-### 2. Install Prisma CLI
+### 2. Install Dependencies
+
+The server uses Prisma with Deno's npm compatibility. Deno will automatically install dependencies when you run the server, but you need to allow npm lifecycle scripts:
+
+```bash
+cd apps/server
+deno install --allow-scripts=npm:@prisma/engines,npm:@prisma/client
+```
+
+### 3. Install Prisma CLI
 
 ```bash
 npm install -g prisma
@@ -47,7 +56,7 @@ Or use it via npx without installing:
 npx prisma --version
 ```
 
-### 3. Generate Prisma Client
+### 4. Generate Prisma Client
 
 Navigate to the server directory and generate the Prisma client:
 
@@ -56,9 +65,11 @@ cd apps/server
 npx prisma generate
 ```
 
-This will create the Prisma client in `apps/server/generated/client`.
+This will create the Prisma client that the server code uses. The client is automatically configured to work with Deno.
 
-### 4. Run Database Migrations
+**Note:** The server's `deno.json` has `"nodeModulesDir": "auto"` which enables npm package lifecycle scripts required by Prisma.
+
+### 5. Run Database Migrations
 
 Create the database schema:
 
@@ -76,7 +87,7 @@ For production, use:
 npx prisma migrate deploy
 ```
 
-### 5. Start the Server
+### 6. Start the Server
 
 From the project root:
 

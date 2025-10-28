@@ -34,7 +34,10 @@ export class PersistentCache {
 
   async entries(): Promise<Array<[string, CacheEntry]>> {
     const allEntries = await this.#prisma.cacheEntry.findMany();
-    return allEntries.map((entry) => [entry.id, { answer: entry.answer }]);
+    return allEntries.map((entry: { id: string; answer: string }) => [
+      entry.id,
+      { answer: entry.answer },
+    ]);
   }
 
   async set(key: string, answer: string) {

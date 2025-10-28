@@ -2,6 +2,7 @@
 
 apps/server/data/
 apps/server/generated/
+apps/server/node_modules/
 
 dist/
 

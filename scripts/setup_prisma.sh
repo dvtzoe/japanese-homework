@@ -15,8 +15,9 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-echo "Installing Prisma CLI..."
-deno install -A npm:prisma@latest
+echo "Installing dependencies..."
+# This will install npm packages and run postinstall scripts
+deno install --allow-scripts=npm:@prisma/engines,npm:@prisma/client
 
 echo "Generating Prisma Client..."
 npx prisma generate --schema=./prisma/schema.prisma
