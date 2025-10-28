@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS cache_entries (
 ```
 
 The server also creates indexes for efficient searching:
+
 - Full-text search index on `question`
 - Index on `image_url`
 - GIN index on `choices` array
@@ -87,17 +88,17 @@ The server also creates indexes for efficient searching:
 
 The cache stores detailed information about each question and answer:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | SERIAL | Primary key - auto-incrementing ID |
-| `answer` | TEXT | The answer provided by the LLM |
-| `answer_index` | INTEGER | Index of the selected choice (for multiple choice questions) |
-| `question` | TEXT | The question text |
-| `image_url` | TEXT | URL of the first image associated with the question |
-| `extracted_text` | TEXT | Text extracted from images (if image contains only text) |
-| `choices` | TEXT[] | Array of answer choices (for multiple choice questions) |
-| `created_at` | TIMESTAMP | When the entry was created |
-| `updated_at` | TIMESTAMP | When the entry was last updated |
+| Column           | Type      | Description                                                  |
+| ---------------- | --------- | ------------------------------------------------------------ |
+| `id`             | SERIAL    | Primary key - auto-incrementing ID                           |
+| `answer`         | TEXT      | The answer provided by the LLM                               |
+| `answer_index`   | INTEGER   | Index of the selected choice (for multiple choice questions) |
+| `question`       | TEXT      | The question text                                            |
+| `image_url`      | TEXT      | URL of the first image associated with the question          |
+| `extracted_text` | TEXT      | Text extracted from images (if image contains only text)     |
+| `choices`        | TEXT[]    | Array of answer choices (for multiple choice questions)      |
+| `created_at`     | TIMESTAMP | When the entry was created                                   |
+| `updated_at`     | TIMESTAMP | When the entry was last updated                              |
 
 ## API Endpoints
 
@@ -106,6 +107,7 @@ The cache stores detailed information about each question and answer:
 Search the cache for questions and answers.
 
 **Query Parameters:**
+
 - `question` (optional): Full-text search on question text
 - `image_url` (optional): Exact match on image URL
 - `choices` (optional): JSON array of choices to match
@@ -113,12 +115,14 @@ Search the cache for questions and answers.
 - `offset` (optional, default: 0): Pagination offset
 
 **Example:**
+
 ```bash
 curl "http://localhost:8000/search?question=grammar&limit=10"
 curl "http://localhost:8000/search?image_url=https://example.com/image.jpg"
 ```
 
 **Response:**
+
 ```json
 {
   "results": [

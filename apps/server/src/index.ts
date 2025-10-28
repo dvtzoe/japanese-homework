@@ -40,37 +40,37 @@ function json(body: unknown, init: ResponseInit = {}): Response {
   });
 }
 
-function canonicalizeQuestion(question: QuestionPayload) {
-  const trimmedChoices = question.choices?.map((choice) => choice.trim())
-    .filter((choice) => choice.length > 0)
-    .sort();
-
-  return {
-    text: question.text.trim().toLowerCase(),
-    images: question.imageUrls
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0)
-      .sort(),
-    choices: trimmedChoices && trimmedChoices.length > 0
-      ? trimmedChoices
-      : undefined,
-    type: question.type,
-  };
-}
-
-async function computeCacheKey(question: QuestionPayload): Promise<string> {
-  const canonical = canonicalizeQuestion(question);
-  const payload = JSON.stringify(canonical);
-  const data = new TextEncoder().encode(payload);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const bytes = new Uint8Array(digest);
-
-  let result = "";
-  for (const byte of bytes) {
-    result += byte.toString(16).padStart(2, "0");
-  }
-  return result;
-}
+// function canonicalizeQuestion(question: QuestionPayload) {
+// 	const trimmedChoices = question.choices
+// 		?.map((choice) => choice.trim())
+// 		.filter((choice) => choice.length > 0)
+// 		.sort();
+//
+// 	return {
+// 		text: question.text.trim().toLowerCase(),
+// 		images: question.imageUrls
+// 			.map((url) => url.trim())
+// 			.filter((url) => url.length > 0)
+// 			.sort(),
+// 		choices:
+// 			trimmedChoices && trimmedChoices.length > 0 ? trimmedChoices : undefined,
+// 		type: question.type,
+// 	};
+// }
+//
+// async function computeCacheKey(question: QuestionPayload): Promise<string> {
+//   const canonical = canonicalizeQuestion(question);
+//   const payload = JSON.stringify(canonical);
+//   const data = new TextEncoder().encode(payload);
+//   const digest = await crypto.subtle.digest("SHA-256", data);
+//   const bytes = new Uint8Array(digest);
+//
+//   let result = "";
+//   for (const byte of bytes) {
+//     result += byte.toString(16).padStart(2, "0");
+//   }
+//   return result;
+// }
 
 function normalizeType(value: unknown): QuestionKind {
   const valid: QuestionKind[] = [
@@ -165,11 +165,7 @@ async function answerQuestion(question: QuestionPayload): Promise<string> {
   const imageUrl = question.imageUrls.length > 0
     ? question.imageUrls[0]
     : undefined;
-  const cached = await cache.get(
-    question.text,
-    imageUrl,
-    question.choices,
-  );
+  const cached = await cache.get(question.text, imageUrl, question.choices);
   if (cached) {
     return cached.answer;
   }

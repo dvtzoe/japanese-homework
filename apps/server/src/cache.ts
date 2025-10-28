@@ -168,46 +168,50 @@ export class PersistentCache {
     params.push(limit, offset);
 
     const result = await this.#pool.query(query, params);
-    return result.rows.map((row: {
-      answer: string;
-      answer_index: number;
-      question: string;
-      image_url: string;
-      extracted_text: string;
-      choices: string[];
-    }) => ({
-      answer: row.answer,
-      answer_index: row.answer_index,
-      question: row.question,
-      image_url: row.image_url,
-      extracted_text: row.extracted_text,
-      choices: row.choices,
-    }));
-  }
-
-  async entries(): Promise<Array<[string, CacheEntry]>> {
-    const result = await this.#pool.query(
-      "SELECT id, answer, answer_index, question, image_url, extracted_text, choices FROM cache_entries",
-    );
-    return result.rows.map((row: {
-      id: string;
-      answer: string;
-      answer_index: number;
-      question: string;
-      image_url: string;
-      extracted_text: string;
-      choices: string[];
-    }) => [
-      row.id,
-      {
+    return result.rows.map(
+      (row: {
+        answer: string;
+        answer_index: number;
+        question: string;
+        image_url: string;
+        extracted_text: string;
+        choices: string[];
+      }) => ({
         answer: row.answer,
         answer_index: row.answer_index,
         question: row.question,
         image_url: row.image_url,
         extracted_text: row.extracted_text,
         choices: row.choices,
-      },
-    ]);
+      }),
+    );
+  }
+
+  async entries(): Promise<Array<[string, CacheEntry]>> {
+    const result = await this.#pool.query(
+      "SELECT id, answer, answer_index, question, image_url, extracted_text, choices FROM cache_entries",
+    );
+    return result.rows.map(
+      (row: {
+        id: string;
+        answer: string;
+        answer_index: number;
+        question: string;
+        image_url: string;
+        extracted_text: string;
+        choices: string[];
+      }) => [
+        row.id,
+        {
+          answer: row.answer,
+          answer_index: row.answer_index,
+          question: row.question,
+          image_url: row.image_url,
+          extracted_text: row.extracted_text,
+          choices: row.choices,
+        },
+      ],
+    );
   }
 
   async set(entry: CacheEntry) {
