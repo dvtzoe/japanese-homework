@@ -9,6 +9,10 @@ const NAME_KEYWORDS = ["name", "名前", "なまえ"];
 const ID_KEYWORDS = ["id"];
 const CLASS_KEYWORDS = ["class"];
 
+// Retry configuration constants
+const MAX_DROPDOWN_RETRIES = 3;
+const RETRY_DELAY_MS = 200;
+
 export async function autoFillQuestion(
   question: QuestionContext,
   credentials: Credentials,
@@ -176,8 +180,7 @@ async function selectDropdown(
     }
 
     // Retry logic with max attempts to prevent infinite loops
-    const maxRetries = 3;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (let attempt = 0; attempt < MAX_DROPDOWN_RETRIES; attempt++) {
       try {
         const element = option.nth(index);
         await element.waitFor({ state: "visible", timeout: 2000 });
@@ -186,14 +189,14 @@ async function selectDropdown(
         await new Promise((resolve) => setTimeout(resolve, 100));
         return true;
       } catch (error) {
-        if (attempt === maxRetries - 1) {
+        if (attempt === MAX_DROPDOWN_RETRIES - 1) {
           console.warn(
-            `Failed to click dropdown option after ${maxRetries} attempts`,
+            `Failed to click dropdown option after ${MAX_DROPDOWN_RETRIES} attempts`,
           );
           throw error;
         }
         // Wait before retry
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
       }
     }
   }
@@ -223,7 +226,12 @@ export async function toggleEmailOptions(page: Page): Promise<boolean> {
   const checkboxCount = await checkboxes.count();
   for (let index = 0; index < checkboxCount; index += 1) {
     const checkbox = checkboxes.nth(index);
-    await checkbox.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    try {
+      await checkbox.waitFor({ state: "visible", timeout: 5000 });
+    } catch (error) {
+      console.warn(`Checkbox ${index} not visible, skipping:`, error);
+      continue;
+    }
     const alreadyChecked = await checkbox.isChecked().catch(() => false);
     if (!alreadyChecked) {
       await checkbox.click({ force: true });
