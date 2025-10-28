@@ -9,11 +9,16 @@ import { homedir } from "node:os";
 const program = new Command();
 
 const CREDENTIALS_PATH = resolve(homedir(), ".jphw", "credentials.json");
+const VERSION_CHECK_FILE = resolve(homedir(), ".jphw", "version-check.json");
+const VERSION = "0.1.0";
+
+// Version check interval (24 hours)
+const VERSION_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
 
 program
   .name("jphw")
   .description("Do Japanese homework")
-  .version("0.0.0")
+  .version(VERSION)
   .argument("[url]", "URL of the form")
   .option(
     "--server <url>",
@@ -39,11 +44,32 @@ program
   .option(
     "--screenshot <path>",
     "Take a screenshot after submission and save to the given path",
+  )
+  .option(
+    "--skip-update-check",
+    "Skip checking for updates",
+    false,
   );
+
+// Add update command
+program
+  .command("update")
+  .description("Update jphw to the latest version")
+  .action(async () => {
+    await updateJphw();
+    Deno.exit(0);
+  });
 
 program.parse();
 
 const options = program.opts();
+
+// Check for updates (unless skipped or running update command)
+if (!options.skipUpdateCheck && program.args[0] !== "update") {
+  await checkForUpdates().catch(() => {
+    // Silently fail update check
+  });
+}
 
 const urlArg = program.args[0];
 if (urlArg) {
@@ -180,4 +206,137 @@ async function persistCredentials(credentials: Credentials) {
     JSON.stringify(credentials, null, 2),
   );
   console.log(`Saved credentials to ${CREDENTIALS_PATH}`);
+}
+
+// Update checker function
+async function checkForUpdates(): Promise<void> {
+  try {
+    // Check if we've checked recently
+    const now = Date.now();
+    let lastCheck = 0;
+
+    try {
+      const data = await Deno.readTextFile(VERSION_CHECK_FILE);
+      const parsed = JSON.parse(data);
+      lastCheck = parsed.lastCheck || 0;
+    } catch {
+      // File doesn't exist, first check
+    }
+
+    // Only check once per day
+    if (now - lastCheck < VERSION_CHECK_INTERVAL) {
+      return;
+    }
+
+    // Get the installation directory from the wrapper
+    const jphwDir = Deno.env.get("JPHW_DIR");
+    if (!jphwDir) {
+      return; // Not installed via wrapper, skip update check
+    }
+
+    // Check git status
+    const gitCheck = new Deno.Command("git", {
+      args: ["-C", jphwDir, "fetch", "--dry-run"],
+      stdout: "null",
+      stderr: "null",
+    });
+
+    await gitCheck.output();
+
+    const gitStatus = new Deno.Command("git", {
+      args: ["-C", jphwDir, "rev-list", "HEAD...origin/main", "--count"],
+      stdout: "piped",
+      stderr: "null",
+    });
+
+    const { stdout } = await gitStatus.output();
+    const decoder = new TextDecoder();
+    const count = parseInt(decoder.decode(stdout).trim());
+
+    if (count > 0) {
+      console.log(
+        `\n⚠️  A new version of jphw is available! Run 'jphw update' to update.\n`,
+      );
+    }
+
+    // Save last check time
+    await ensureDir(dirname(VERSION_CHECK_FILE));
+    await Deno.writeTextFile(
+      VERSION_CHECK_FILE,
+      JSON.stringify({ lastCheck: now }),
+    );
+  } catch {
+    // Silently fail if update check fails
+  }
+}
+
+// Update function
+async function updateJphw(): Promise<void> {
+  console.log("Checking for updates...");
+
+  const jphwDir = Deno.env.get("JPHW_DIR");
+  if (!jphwDir) {
+    console.error(
+      "Error: JPHW_DIR environment variable not set. Unable to locate installation directory.",
+    );
+    console.error("This might happen if jphw was not installed via install.sh");
+    Deno.exit(1);
+  }
+
+  try {
+    // Check if we're in a git repository
+    const gitCheck = new Deno.Command("git", {
+      args: ["-C", jphwDir, "rev-parse", "--git-dir"],
+      stdout: "null",
+      stderr: "null",
+    });
+
+    const { code } = await gitCheck.output();
+    if (code !== 0) {
+      console.error(
+        "Error: Installation directory is not a git repository.",
+      );
+      console.error(
+        "Please reinstall jphw using the installation script.",
+      );
+      Deno.exit(1);
+    }
+
+    console.log("Fetching latest changes...");
+
+    // Fetch updates
+    const fetchCmd = new Deno.Command("git", {
+      args: ["-C", jphwDir, "fetch", "origin"],
+    });
+    await fetchCmd.output();
+
+    // Check if updates are available
+    const revListCmd = new Deno.Command("git", {
+      args: ["-C", jphwDir, "rev-list", "HEAD...origin/main", "--count"],
+      stdout: "piped",
+    });
+
+    const { stdout } = await revListCmd.output();
+    const decoder = new TextDecoder();
+    const count = parseInt(decoder.decode(stdout).trim());
+
+    if (count === 0) {
+      console.log("✓ jphw is already up to date!");
+      return;
+    }
+
+    console.log(`Found ${count} new commit(s). Updating...`);
+
+    // Reset to origin/main
+    const resetCmd = new Deno.Command("git", {
+      args: ["-C", jphwDir, "reset", "--hard", "origin/main"],
+    });
+    await resetCmd.output();
+
+    console.log("✓ jphw has been updated successfully!");
+    console.log("Run 'jphw --help' to see any new features.");
+  } catch (error) {
+    console.error("Error updating jphw:", error);
+    Deno.exit(1);
+  }
 }

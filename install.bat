@@ -120,6 +120,7 @@ REM Create the wrapper batch file
     echo REM This script runs the CLI from the installation directory
     echo.
     echo set "JPHW_DIR=%PROJECT_DIR%"
+    echo set "JPHW_DIR=%%JPHW_DIR:\=/%%"
     echo cd /d "%%JPHW_DIR%%" ^&^& deno task start %%*
 ) > "%WRAPPER_PATH%"
 

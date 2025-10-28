@@ -11,8 +11,14 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Project directory
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine project directory
+if [ -n "$JPHW_INSTALL_DIR" ]; then
+    # If JPHW_INSTALL_DIR is set, use it (for remote installation)
+    PROJECT_DIR="$JPHW_INSTALL_DIR"
+else
+    # Otherwise use the script's directory (for local installation)
+    PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 echo -e "${BLUE}================================================${NC}"
 echo -e "${BLUE}Japanese Homework CLI (jphw) Installation${NC}"
@@ -95,6 +101,40 @@ install_deno_apt() {
     fi
 }
 
+# Install Deno using pacman
+install_deno_pacman() {
+    print_info "Attempting to install Deno using pacman..."
+    if command -v pacman &> /dev/null; then
+        if sudo pacman -S --noconfirm deno 2>/dev/null; then
+            print_success "Deno installed successfully via pacman"
+            return 0
+        else
+            print_warning "Failed to install Deno via pacman"
+            return 1
+        fi
+    else
+        print_info "pacman is not available"
+        return 1
+    fi
+}
+
+# Install Deno using dnf
+install_deno_dnf() {
+    print_info "Attempting to install Deno using dnf..."
+    if command -v dnf &> /dev/null; then
+        if sudo dnf install -y deno 2>/dev/null; then
+            print_success "Deno installed successfully via dnf"
+            return 0
+        else
+            print_warning "Failed to install Deno via dnf"
+            return 1
+        fi
+    else
+        print_info "dnf is not available"
+        return 1
+    fi
+}
+
 # Install Deno using snap
 install_deno_snap() {
     print_info "Attempting to install Deno using snap..."
@@ -112,6 +152,47 @@ install_deno_snap() {
     fi
 }
 
+# Install unzip/7z if needed
+install_unzip_tools() {
+    # Check if unzip or 7z is already available
+    if command -v unzip &> /dev/null || command -v 7z &> /dev/null; then
+        return 0
+    fi
+    
+    print_info "Installing unzip (required for Deno installation)..."
+    
+    # Try to install unzip using available package managers
+    if command -v apt &> /dev/null || command -v apt-get &> /dev/null; then
+        if sudo apt-get update && sudo apt-get install -y unzip; then
+            print_success "unzip installed successfully via apt"
+            return 0
+        fi
+    elif command -v dnf &> /dev/null; then
+        if sudo dnf install -y unzip; then
+            print_success "unzip installed successfully via dnf"
+            return 0
+        fi
+    elif command -v pacman &> /dev/null; then
+        if sudo pacman -S --noconfirm unzip; then
+            print_success "unzip installed successfully via pacman"
+            return 0
+        fi
+    elif command -v yum &> /dev/null; then
+        if sudo yum install -y unzip; then
+            print_success "unzip installed successfully via yum"
+            return 0
+        fi
+    elif command -v brew &> /dev/null; then
+        if brew install unzip; then
+            print_success "unzip installed successfully via Homebrew"
+            return 0
+        fi
+    fi
+    
+    print_warning "Could not install unzip automatically"
+    return 1
+}
+
 # Install Deno using the official installer
 install_deno_official() {
     print_info "Attempting to install Deno using the official installer..."
@@ -122,10 +203,13 @@ install_deno_official() {
         return 1
     fi
     
+    # Try to install unzip/7z if not available
     if ! command -v unzip &> /dev/null && ! command -v 7z &> /dev/null; then
-        print_error "Either unzip or 7z is required but neither is installed."
-        print_error "Please install unzip and try again."
-        return 1
+        install_unzip_tools || {
+            print_error "Either unzip or 7z is required but neither is installed."
+            print_error "Please install unzip and try again."
+            return 1
+        }
     fi
     
     # Run the official Deno installer
@@ -145,10 +229,14 @@ install_deno_official() {
 install_deno() {
     print_info "Starting Deno installation..."
     
-    # Try package managers first (prefer npm, then brew, then snap)
+    # Try package managers first (prefer npm, then brew, then pacman, dnf, snap)
     if install_deno_npm; then
         return 0
     elif install_deno_brew; then
+        return 0
+    elif install_deno_pacman; then
+        return 0
+    elif install_deno_dnf; then
         return 0
     elif install_deno_snap; then
         return 0
@@ -189,7 +277,7 @@ create_executable() {
 # jphw - Japanese Homework CLI wrapper
 # This script runs the CLI from the installation directory
 
-JPHW_DIR="$PROJECT_DIR"
+export JPHW_DIR="$PROJECT_DIR"
 
 cd "\$JPHW_DIR" && deno task start "\$@"
 EOF

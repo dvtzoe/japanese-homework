@@ -6,15 +6,15 @@
 
 ### Quick Install (Recommended)
 
-The easiest way to install `jphw` is using the automated installation scripts.
-These scripts will automatically:
-
-- Check if Deno is installed, and install it if needed (using available package
-  managers or the official installer)
-- Install Playwright browsers (Chromium)
-- Create a `jphw` executable and add it to your PATH
+The easiest way to install `jphw` is using a single command:
 
 #### Unix-like systems (Linux, macOS)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dvtzoe/japanese-homework/main/install-remote.sh | bash
+```
+
+Or clone and install manually:
 
 ```sh
 git clone https://github.com/dvtzoe/japanese-homework.git
@@ -29,13 +29,22 @@ jphw --help
 jphw https://your-homework-url.com
 ```
 
+To update to the latest version:
+
+```sh
+jphw update
+```
+
 To uninstall:
 
 ```sh
+cd japanese-homework
 ./uninstall.sh
 ```
 
 #### Windows
+
+Clone and install:
 
 ```cmd
 git clone https://github.com/dvtzoe/japanese-homework.git
@@ -50,9 +59,16 @@ jphw --help
 jphw https://your-homework-url.com
 ```
 
+To update to the latest version:
+
+```cmd
+jphw update
+```
+
 To uninstall:
 
 ```cmd
+cd japanese-homework
 uninstall.bat
 ```
 
