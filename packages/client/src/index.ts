@@ -104,7 +104,14 @@ export default async function client(options: ClientOptions): Promise<void> {
           const answer = answers[index];
           console.log(`Answer → ${truncate(answer)}`);
           await applyAnswer(question, answer);
+          // Small delay between filling questions to avoid race conditions
+          if (index < pending.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
         }
+
+        // Wait a bit after filling all fields to ensure form state is stable
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       const nextButton = page.getByRole("button", { name: /next/i });
@@ -122,6 +129,8 @@ export default async function client(options: ClientOptions): Promise<void> {
         }
 
         console.log("Advancing to next page...");
+        // Wait before clicking to ensure form is stable
+        await new Promise((resolve) => setTimeout(resolve, 300));
         await nextButton.first().click();
         await page.waitForLoadState("networkidle");
         pageIndex += 1;
@@ -144,6 +153,8 @@ export default async function client(options: ClientOptions): Promise<void> {
         }
 
         console.log("Submitting form...");
+        // Wait before clicking to ensure form is stable
+        await new Promise((resolve) => setTimeout(resolve, 300));
         await submitButton.first().click();
         await page.waitForLoadState("networkidle").catch(() => {});
         console.log("Form submitted.");
