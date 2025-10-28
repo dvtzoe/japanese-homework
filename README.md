@@ -55,9 +55,13 @@ deno start:cli
 ## 2. Start the Answer Server
 
 By default the CLI sends requests to the hosted server at
-`https://jphw.crabdance.com`, which already talks to OpenRouter and
-caches responses. If you prefer to self-host, start the bundled Deno server as
-shown below. The server supports HTTPS when provided with certificate paths.
+`https://jphw.crabdance.com`, which already talks to OpenRouter and caches
+responses. If you prefer to self-host, start the bundled Deno server as shown
+below. The server supports HTTPS when provided with certificate paths.
+
+**Note:** The server now uses PostgreSQL for caching instead of JSON files. See
+[apps/server/POSTGRES_SETUP.md](apps/server/POSTGRES_SETUP.md) for detailed
+setup instructions. The table will be created automatically on first run.
 
 ```sh
 deno task start:server
@@ -65,14 +69,16 @@ deno task start:server
 
 Set the following environment variables before launching:
 
+- `DATABASE_URL` – required, PostgreSQL connection string (e.g.,
+  `******localhost:5432/jphw`)
 - `OPENROUTER_API_KEY` – required
 - `OPENROUTER_MODEL` - The llm model that will be used
 - `PORT` (default `8000`)
 - `TLS_CERT_FILE` and `TLS_KEY_FILE` – absolute or relative paths to your TLS
   certificate and private key to enable HTTPS
 
-The server persists cached answers in `apps/server/data/cache.json` so repeated
-questions return instantly.
+The server persists cached answers in a PostgreSQL database so repeated
+questions return instantly. The cache table is created automatically on startup.
 
 ### Options
 

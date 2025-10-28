@@ -1,57 +1,236 @@
-import { ensureDir } from "@std/fs/ensure-dir";
-import { dirname, fromFileUrl } from "@std/path";
+import pg from "pg";
+
+const { Pool } = pg;
 
 export interface CacheEntry {
   answer: string;
+  answer_index?: number;
+  question?: string;
+  image_hash?: string;
+  extracted_text?: string;
+  choices?: string[];
+}
+
+export interface SearchFilters {
+  question?: string;
+  image_hash?: string;
+  choices?: string[];
+  limit?: number;
+  offset?: number;
 }
 
 export class PersistentCache {
-  #path: string;
-  #memory = new Map<string, CacheEntry>();
+  #pool: pg.Pool;
 
-  constructor(path: URL = new URL("../data/cache.json", import.meta.url)) {
-    this.#path = fromFileUrl(path);
+  constructor() {
+    const databaseUrl = Deno.env.get("DATABASE_URL");
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL environment variable is not set");
+    }
+    this.#pool = new Pool({
+      connectionString: databaseUrl,
+    });
   }
 
   async init() {
+    // Test the database connection and create table if it doesn't exist
     try {
-      const raw = await Deno.readTextFile(this.#path);
-      const data = JSON.parse(raw) as Record<string, CacheEntry>;
-      for (const [key, value] of Object.entries(data)) {
-        this.#memory.set(key, value);
+      const client = await this.#pool.connect();
+      try {
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS cache_entries (
+            id SERIAL PRIMARY KEY,
+            answer TEXT NOT NULL,
+            answer_index INTEGER,
+            question TEXT,
+            image_hash TEXT,
+            extracted_text TEXT,
+            choices TEXT[],
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+
+        // Create indexes for common search patterns
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS idx_cache_entries_question 
+          ON cache_entries USING gin(to_tsvector('english', COALESCE(question, '')))
+        `);
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS idx_cache_entries_image_hash 
+          ON cache_entries (image_hash)
+        `);
+        await client.query(`
+          CREATE INDEX IF NOT EXISTS idx_cache_entries_choices 
+          ON cache_entries USING gin(choices)
+        `);
+
+        console.log("Database connected successfully");
+      } finally {
+        client.release();
       }
     } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        await ensureDir(dirname(this.#path));
-        await this.#write();
-      } else {
-        throw error;
-      }
+      console.error("Failed to connect to database:", error);
+      throw error;
     }
   }
 
-  get(key: string): CacheEntry | undefined {
-    return this.#memory.get(key);
+  async get(
+    question?: string,
+    imageHash?: string,
+    choices?: string[],
+  ): Promise<CacheEntry | undefined> {
+    // Build dynamic query based on available parameters
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let paramIndex = 1;
+
+    if (question) {
+      conditions.push(`question = $${paramIndex++}`);
+      params.push(question);
+    }
+
+    if (imageHash) {
+      conditions.push(`image_hash = $${paramIndex++}`);
+      params.push(imageHash);
+    }
+
+    if (choices && choices.length > 0) {
+      conditions.push(`choices = $${paramIndex++}`);
+      params.push(choices);
+    }
+
+    if (conditions.length === 0) {
+      return undefined;
+    }
+
+    const query = `
+      SELECT answer, answer_index, question, image_hash, extracted_text, choices
+      FROM cache_entries
+      WHERE ${conditions.join(" AND ")}
+      LIMIT 1
+    `;
+
+    const result = await this.#pool.query(query, params);
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+
+    const row = result.rows[0];
+    return {
+      answer: row.answer,
+      answer_index: row.answer_index,
+      question: row.question,
+      image_hash: row.image_hash,
+      extracted_text: row.extracted_text,
+      choices: row.choices,
+    };
   }
 
-  entries(): IterableIterator<[string, CacheEntry]> {
-    return this.#memory.entries();
+  async search(filters: SearchFilters): Promise<CacheEntry[]> {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let paramIndex = 1;
+
+    if (filters.question) {
+      conditions.push(
+        `to_tsvector('english', COALESCE(question, '')) @@ plainto_tsquery('english', $${paramIndex++})`,
+      );
+      params.push(filters.question);
+    }
+
+    if (filters.image_hash) {
+      conditions.push(`image_hash = $${paramIndex++}`);
+      params.push(filters.image_hash);
+    }
+
+    if (filters.choices && filters.choices.length > 0) {
+      conditions.push(`choices = $${paramIndex++}`);
+      params.push(filters.choices);
+    }
+
+    const whereClause = conditions.length > 0
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
+
+    const limit = filters.limit ?? 50;
+    const offset = filters.offset ?? 0;
+
+    const query = `
+      SELECT id, answer, answer_index, question, image_hash, extracted_text, choices, created_at, updated_at
+      FROM cache_entries
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex++}
+      OFFSET $${paramIndex++}
+    `;
+
+    params.push(limit, offset);
+
+    const result = await this.#pool.query(query, params);
+    return result.rows.map(
+      (row: {
+        answer: string;
+        answer_index: number;
+        question: string;
+        image_hash: string;
+        extracted_text: string;
+        choices: string[];
+      }) => ({
+        answer: row.answer,
+        answer_index: row.answer_index,
+        question: row.question,
+        image_hash: row.image_hash,
+        extracted_text: row.extracted_text,
+        choices: row.choices,
+      }),
+    );
   }
 
-  async set(key: string, answer: string) {
-    this.#memory.set(key, {
-      answer,
-    });
-    await this.#write();
+  async entries(): Promise<Array<[string, CacheEntry]>> {
+    const result = await this.#pool.query(
+      "SELECT id, answer, answer_index, question, image_hash, extracted_text, choices FROM cache_entries",
+    );
+    return result.rows.map(
+      (row: {
+        id: string;
+        answer: string;
+        answer_index: number;
+        question: string;
+        image_hash: string;
+        extracted_text: string;
+        choices: string[];
+      }) => [
+        row.id,
+        {
+          answer: row.answer,
+          answer_index: row.answer_index,
+          question: row.question,
+          image_hash: row.image_hash,
+          extracted_text: row.extracted_text,
+          choices: row.choices,
+        },
+      ],
+    );
   }
 
-  #serialize(): string {
-    const object = Object.fromEntries(this.#memory.entries());
-    return JSON.stringify(object, null, 2);
+  async set(entry: CacheEntry) {
+    await this.#pool.query(
+      `INSERT INTO cache_entries (answer, answer_index, question, image_hash, extracted_text, choices, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+       RETURNING id`,
+      [
+        entry.answer,
+        entry.answer_index ?? null,
+        entry.question ?? null,
+        entry.image_hash ?? null,
+        entry.extracted_text ?? null,
+        entry.choices ?? null,
+      ],
+    );
   }
 
-  async #write() {
-    await ensureDir(dirname(this.#path));
-    await Deno.writeTextFile(this.#path, this.#serialize());
+  async disconnect() {
+    await this.#pool.end();
   }
 }

@@ -8,6 +8,7 @@ import type {
 
 import { PersistentCache } from "./cache.ts";
 import { OpenRouterClient } from "./openrouter.ts";
+import { hashImagesFromUrls } from "./image_hash.ts";
 
 const PORT = Number(Deno.env.get("PORT") ?? 8000);
 const HOSTNAME = Deno.env.get("HOST") ?? "0.0.0.0";
@@ -40,37 +41,37 @@ function json(body: unknown, init: ResponseInit = {}): Response {
   });
 }
 
-function canonicalizeQuestion(question: QuestionPayload) {
-  const trimmedChoices = question.choices?.map((choice) => choice.trim())
-    .filter((choice) => choice.length > 0)
-    .sort();
-
-  return {
-    text: question.text.trim().toLowerCase(),
-    images: question.imageUrls
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0)
-      .sort(),
-    choices: trimmedChoices && trimmedChoices.length > 0
-      ? trimmedChoices
-      : undefined,
-    type: question.type,
-  };
-}
-
-async function computeCacheKey(question: QuestionPayload): Promise<string> {
-  const canonical = canonicalizeQuestion(question);
-  const payload = JSON.stringify(canonical);
-  const data = new TextEncoder().encode(payload);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const bytes = new Uint8Array(digest);
-
-  let result = "";
-  for (const byte of bytes) {
-    result += byte.toString(16).padStart(2, "0");
-  }
-  return result;
-}
+// function canonicalizeQuestion(question: QuestionPayload) {
+// 	const trimmedChoices = question.choices
+// 		?.map((choice) => choice.trim())
+// 		.filter((choice) => choice.length > 0)
+// 		.sort();
+//
+// 	return {
+// 		text: question.text.trim().toLowerCase(),
+// 		images: question.imageUrls
+// 			.map((url) => url.trim())
+// 			.filter((url) => url.length > 0)
+// 			.sort(),
+// 		choices:
+// 			trimmedChoices && trimmedChoices.length > 0 ? trimmedChoices : undefined,
+// 		type: question.type,
+// 	};
+// }
+//
+// async function computeCacheKey(question: QuestionPayload): Promise<string> {
+//   const canonical = canonicalizeQuestion(question);
+//   const payload = JSON.stringify(canonical);
+//   const data = new TextEncoder().encode(payload);
+//   const digest = await crypto.subtle.digest("SHA-256", data);
+//   const bytes = new Uint8Array(digest);
+//
+//   let result = "";
+//   for (const byte of bytes) {
+//     result += byte.toString(16).padStart(2, "0");
+//   }
+//   return result;
+// }
 
 function normalizeType(value: unknown): QuestionKind {
   const valid: QuestionKind[] = [
@@ -161,16 +162,31 @@ function parseBatchRequest(payload: unknown): QuestionPayload[] {
 }
 
 async function answerQuestion(question: QuestionPayload): Promise<string> {
-  const cacheKey = await computeCacheKey(question);
-  const cached = cache.get(cacheKey);
+  // Hash images if present
+  const imageHash = question.imageUrls.length > 0
+    ? await hashImagesFromUrls(question.imageUrls)
+    : undefined;
+
+  // Try to find cached answer using question details
+  const cached = await cache.get(question.text, imageHash, question.choices);
   if (cached) {
     return cached.answer;
   }
 
   const client = getRouterClient();
-  const answer = await client.answer(question);
-  await cache.set(cacheKey, answer);
-  return answer;
+  const result = await client.answer(question);
+
+  // Store in cache with all relevant details
+  await cache.set({
+    answer: result.answer,
+    answer_index: result.answerIndex,
+    question: question.text,
+    image_hash: imageHash,
+    extracted_text: result.extractedText,
+    choices: question.choices,
+  });
+
+  return result.answer;
 }
 
 async function handleAnswer(request: Request): Promise<Response> {
@@ -214,6 +230,32 @@ async function handleBatchAnswers(request: Request): Promise<Response> {
     console.error("OpenRouter failure", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return json({ error: message }, { status: 502 });
+  }
+}
+
+async function handleSearch(request: Request): Promise<Response> {
+  try {
+    const url = new URL(request.url);
+    const question = url.searchParams.get("question") ?? undefined;
+    const imageHash = url.searchParams.get("image_hash") ?? undefined;
+    const choicesParam = url.searchParams.get("choices");
+    const choices = choicesParam ? JSON.parse(choicesParam) : undefined;
+    const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+
+    const results = await cache.search({
+      question,
+      image_hash: imageHash,
+      choices,
+      limit,
+      offset,
+    });
+
+    return json({ results, count: results.length }, { status: 200 });
+  } catch (error) {
+    console.error("Search failure", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return json({ error: message }, { status: 400 });
   }
 }
 
@@ -265,6 +307,11 @@ Deno.serve(serveOptions, async (request) => {
     return json({ status: "ok" }, { headers: corsHeaders() });
   }
 
+  if (request.method === "GET" && url.pathname === "/search") {
+    const response = await handleSearch(request);
+    return withCors(response);
+  }
+
   if (request.method === "POST" && url.pathname === "/answers") {
     const response = await handleBatchAnswers(request);
     return withCors(response);
@@ -293,3 +340,16 @@ function corsHeaders(): Headers {
     "access-control-allow-headers": "content-type",
   });
 }
+
+// Graceful shutdown
+Deno.addSignalListener("SIGINT", async () => {
+  console.log("\nShutting down gracefully...");
+  await cache.disconnect();
+  Deno.exit(0);
+});
+
+Deno.addSignalListener("SIGTERM", async () => {
+  console.log("\nShutting down gracefully...");
+  await cache.disconnect();
+  Deno.exit(0);
+});
