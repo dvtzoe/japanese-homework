@@ -1,57 +1,56 @@
-import { ensureDir } from "@std/fs/ensure-dir";
-import { dirname, fromFileUrl } from "@std/path";
+import { PrismaClient } from "@prisma/client";
 
 export interface CacheEntry {
   answer: string;
 }
 
 export class PersistentCache {
-  #path: string;
-  #memory = new Map<string, CacheEntry>();
+  #prisma: PrismaClient;
 
-  constructor(path: URL = new URL("../data/cache.json", import.meta.url)) {
-    this.#path = fromFileUrl(path);
+  constructor() {
+    this.#prisma = new PrismaClient();
   }
 
   async init() {
+    // Test the database connection
     try {
-      const raw = await Deno.readTextFile(this.#path);
-      const data = JSON.parse(raw) as Record<string, CacheEntry>;
-      for (const [key, value] of Object.entries(data)) {
-        this.#memory.set(key, value);
-      }
+      await this.#prisma.$connect();
+      console.log("Database connected successfully");
     } catch (error) {
-      if (error instanceof Deno.errors.NotFound) {
-        await ensureDir(dirname(this.#path));
-        await this.#write();
-      } else {
-        throw error;
-      }
+      console.error("Failed to connect to database:", error);
+      throw error;
     }
   }
 
-  get(key: string): CacheEntry | undefined {
-    return this.#memory.get(key);
+  async get(key: string): Promise<CacheEntry | undefined> {
+    const entry = await this.#prisma.cacheEntry.findUnique({
+      where: { id: key },
+    });
+    if (!entry) {
+      return undefined;
+    }
+    return { answer: entry.answer };
   }
 
-  entries(): IterableIterator<[string, CacheEntry]> {
-    return this.#memory.entries();
+  async entries(): Promise<Array<[string, CacheEntry]>> {
+    const allEntries = await this.#prisma.cacheEntry.findMany();
+    return allEntries.map((entry) => [entry.id, { answer: entry.answer }]);
   }
 
   async set(key: string, answer: string) {
-    this.#memory.set(key, {
-      answer,
+    await this.#prisma.cacheEntry.upsert({
+      where: { id: key },
+      create: {
+        id: key,
+        answer,
+      },
+      update: {
+        answer,
+      },
     });
-    await this.#write();
   }
 
-  #serialize(): string {
-    const object = Object.fromEntries(this.#memory.entries());
-    return JSON.stringify(object, null, 2);
-  }
-
-  async #write() {
-    await ensureDir(dirname(this.#path));
-    await Deno.writeTextFile(this.#path, this.#serialize());
+  async disconnect() {
+    await this.#prisma.$disconnect();
   }
 }

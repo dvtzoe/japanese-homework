@@ -162,7 +162,7 @@ function parseBatchRequest(payload: unknown): QuestionPayload[] {
 
 async function answerQuestion(question: QuestionPayload): Promise<string> {
   const cacheKey = await computeCacheKey(question);
-  const cached = cache.get(cacheKey);
+  const cached = await cache.get(cacheKey);
   if (cached) {
     return cached.answer;
   }
@@ -293,3 +293,16 @@ function corsHeaders(): Headers {
     "access-control-allow-headers": "content-type",
   });
 }
+
+// Graceful shutdown
+Deno.addSignalListener("SIGINT", async () => {
+  console.log("\nShutting down gracefully...");
+  await cache.disconnect();
+  Deno.exit(0);
+});
+
+Deno.addSignalListener("SIGTERM", async () => {
+  console.log("\nShutting down gracefully...");
+  await cache.disconnect();
+  Deno.exit(0);
+});
