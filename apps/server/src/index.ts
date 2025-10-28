@@ -161,16 +161,33 @@ function parseBatchRequest(payload: unknown): QuestionPayload[] {
 }
 
 async function answerQuestion(question: QuestionPayload): Promise<string> {
-  const cacheKey = await computeCacheKey(question);
-  const cached = await cache.get(cacheKey);
+  // Try to find cached answer using question details
+  const imageUrl = question.imageUrls.length > 0
+    ? question.imageUrls[0]
+    : undefined;
+  const cached = await cache.get(
+    question.text,
+    imageUrl,
+    question.choices,
+  );
   if (cached) {
     return cached.answer;
   }
 
   const client = getRouterClient();
-  const answer = await client.answer(question);
-  await cache.set(cacheKey, answer);
-  return answer;
+  const result = await client.answer(question);
+
+  // Store in cache with all relevant details
+  await cache.set({
+    answer: result.answer,
+    answer_index: result.answerIndex,
+    question: question.text,
+    image_url: imageUrl,
+    extracted_text: result.extractedText,
+    choices: question.choices,
+  });
+
+  return result.answer;
 }
 
 async function handleAnswer(request: Request): Promise<Response> {
@@ -214,6 +231,32 @@ async function handleBatchAnswers(request: Request): Promise<Response> {
     console.error("OpenRouter failure", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return json({ error: message }, { status: 502 });
+  }
+}
+
+async function handleSearch(request: Request): Promise<Response> {
+  try {
+    const url = new URL(request.url);
+    const question = url.searchParams.get("question") ?? undefined;
+    const imageUrl = url.searchParams.get("image_url") ?? undefined;
+    const choicesParam = url.searchParams.get("choices");
+    const choices = choicesParam ? JSON.parse(choicesParam) : undefined;
+    const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+
+    const results = await cache.search({
+      question,
+      image_url: imageUrl,
+      choices,
+      limit,
+      offset,
+    });
+
+    return json({ results, count: results.length }, { status: 200 });
+  } catch (error) {
+    console.error("Search failure", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return json({ error: message }, { status: 400 });
   }
 }
 
@@ -263,6 +306,11 @@ Deno.serve(serveOptions, async (request) => {
 
   if (request.method === "GET" && url.pathname === "/healthz") {
     return json({ status: "ok" }, { headers: corsHeaders() });
+  }
+
+  if (request.method === "GET" && url.pathname === "/search") {
+    const response = await handleSearch(request);
+    return withCors(response);
   }
 
   if (request.method === "POST" && url.pathname === "/answers") {
