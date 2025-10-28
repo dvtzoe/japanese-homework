@@ -32,7 +32,7 @@ export class OpenRouterClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${this.#apiKey}`,
+        Authorization: `Bearer ${this.#apiKey}`,
         "HTTP-Referer": "https://github.com/dvtzoe/japanese-homework",
         "X-Title": "Japanese Homework",
       },
@@ -60,7 +60,7 @@ export class OpenRouterClient {
       );
     }
 
-    const payload = await response.json() as {
+    const payload = (await response.json()) as {
       choices: Array<{ message: { content?: string } }>;
     };
 
@@ -74,9 +74,7 @@ export class OpenRouterClient {
 }
 
 function buildPrompt(question: QuestionPayload): MessagesContent {
-  const lines = [
-    `Question: ${question.text.trim()}`,
-  ];
+  const lines = [`Question: ${question.text.trim()}`];
 
   if (question.choices && question.choices.length > 0) {
     lines.push("Choices:");
@@ -90,9 +88,7 @@ function buildPrompt(question: QuestionPayload): MessagesContent {
       "Respond with ONLY the index of choice number that best answers the question.",
     );
   } else {
-    lines.push(
-      "Respond with the concise text that best answers the question.",
-    );
+    lines.push("Respond with the concise text that best answers the question.");
   }
 
   const content: MessagesContent = [{ type: "text", text: lines.join("\n") }];

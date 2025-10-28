@@ -20,13 +20,13 @@ caching.
 Create a `.env` file in the project root or set the environment variable:
 
 ```bash
-DATABASE_URL="******localhost:5432/database_name"
+DATABASE_URL="<your_user>:<password>@<host>:<port>/<database_name>"
 ```
 
 For example, with default local PostgreSQL:
 
 ```bash
-DATABASE_URL="******localhost:5432/jphw"
+DATABASE_URL="your_user:pass@localhost:5432/jphw"
 ```
 
 **Important Environment Variables:**
@@ -59,7 +59,7 @@ deno task start:server
 Or with environment variables:
 
 ```bash
-DATABASE_URL="******localhost:5432/jphw" OPENROUTER_API_KEY=your_key deno task start:server
+DATABASE_URL="your_user:password@localhost:5432/jphw" OPENROUTER_API_KEY=<your_key> deno task start:server
 ```
 
 The server will automatically create the `cache_entries` table with this schema:
@@ -97,7 +97,7 @@ If you get connection errors:
 
 2. Check your `DATABASE_URL` format:
    ```
-   postgresql://[user[:password]@][host][:port][/dbname][?param=value&...]
+   postgresql://<your_user>:<password>@<host>:<port>/<database_name>
    ```
 
 3. Ensure the database exists:
@@ -125,7 +125,7 @@ For hosted databases that require SSL, add `?sslmode=require` to your connection
 string:
 
 ```bash
-DATABASE_URL="******host:5432/jphw?sslmode=require"
+DATABASE_URL="your_user:passwordhost:5432/jphw?sslmode=require"
 ```
 
 ## Viewing Cache Data
@@ -158,7 +158,7 @@ Or use a GUI tool like:
   instances
 - Set appropriate pool size based on your needs:
   ```bash
-  DATABASE_URL="******host:5432/jphw?max_pool_size=20"
+  DATABASE_URL="your_user:password@localhost:5432/jphw?max_pool_size=20"
   ```
 - Monitor connection counts and query performance
 - Set up regular backups
