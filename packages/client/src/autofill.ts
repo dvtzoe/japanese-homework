@@ -9,6 +9,10 @@ const NAME_KEYWORDS = ["name", "名前", "なまえ"];
 const ID_KEYWORDS = ["id"];
 const CLASS_KEYWORDS = ["class"];
 
+// Retry configuration constants
+const MAX_DROPDOWN_RETRIES = 3;
+const RETRY_DELAY_MS = 200;
+
 export async function autoFillQuestion(
   question: QuestionContext,
   credentials: Credentials,
@@ -101,13 +105,21 @@ export function truncate(value: string, length = 80): string {
 async function fillText(locator: Locator, answer: string): Promise<boolean> {
   const input = locator.locator('input[type="text"]');
   if (await input.count()) {
-    await input.first().fill(answer);
+    const element = input.first();
+    await element.waitFor({ state: "visible", timeout: 5000 });
+    await element.fill(answer);
+    // Small delay to allow form state to update
+    await new Promise((resolve) => setTimeout(resolve, 100));
     return true;
   }
 
   const textarea = locator.locator("textarea");
   if (await textarea.count()) {
-    await textarea.first().fill(answer);
+    const element = textarea.first();
+    await element.waitFor({ state: "visible", timeout: 5000 });
+    await element.fill(answer);
+    // Small delay to allow form state to update
+    await new Promise((resolve) => setTimeout(resolve, 100));
     return true;
   }
 
@@ -132,7 +144,11 @@ async function selectRadio(
       return false;
     }
 
-    await option.nth(index).click();
+    const element = option.nth(index);
+    await element.waitFor({ state: "visible", timeout: 5000 });
+    await element.click();
+    // Small delay to allow form state to update
+    await new Promise((resolve) => setTimeout(resolve, 100));
     return true;
   }
 
@@ -144,9 +160,12 @@ async function selectDropdown(
   locator: Locator,
   answer: number,
 ): Promise<boolean> {
-  await locator.locator("[role='listbox']").first().click();
+  const listbox = locator.locator("[role='listbox']").first();
+  await listbox.waitFor({ state: "visible", timeout: 5000 });
+  await listbox.click();
+
   const option = locator.locator("[role='option']");
-  await option.first().waitFor();
+  await option.first().waitFor({ state: "visible", timeout: 5000 });
 
   if (await option.count() > 0) {
     const index = answer;
@@ -160,16 +179,26 @@ async function selectDropdown(
       return false;
     }
 
-    const click = async () => {
+    // Retry logic with max attempts to prevent infinite loops
+    for (let attempt = 0; attempt < MAX_DROPDOWN_RETRIES; attempt++) {
       try {
-        await option.nth(index).click({ timeout: 1000 });
-      } catch {
-        click();
+        const element = option.nth(index);
+        await element.waitFor({ state: "visible", timeout: 2000 });
+        await element.click({ timeout: 2000 });
+        // Small delay to allow form state to update
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return true;
+      } catch (error) {
+        if (attempt === MAX_DROPDOWN_RETRIES - 1) {
+          console.warn(
+            `Failed to click dropdown option after ${MAX_DROPDOWN_RETRIES} attempts`,
+          );
+          throw error;
+        }
+        // Wait before retry
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
       }
-    };
-    await click();
-
-    return true;
+    }
   }
 
   console.warn("No dropdown select found for dropdown question.");
@@ -197,9 +226,17 @@ export async function toggleEmailOptions(page: Page): Promise<boolean> {
   const checkboxCount = await checkboxes.count();
   for (let index = 0; index < checkboxCount; index += 1) {
     const checkbox = checkboxes.nth(index);
+    try {
+      await checkbox.waitFor({ state: "visible", timeout: 5000 });
+    } catch (error) {
+      console.warn(`Checkbox ${index} not visible, skipping:`, error);
+      continue;
+    }
     const alreadyChecked = await checkbox.isChecked().catch(() => false);
     if (!alreadyChecked) {
       await checkbox.click({ force: true });
+      // Small delay to allow form state to update
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
     handled = true;
   }
@@ -255,10 +292,13 @@ async function selectClassFromOptions(
   const optionCount = await options.count();
   for (let index = 0; index < optionCount; index += 1) {
     const option = options.nth(index).locator("../..");
+    await option.waitFor({ state: "visible", timeout: 5000 });
     const label = await option.innerText();
     const canonical = canonicalizeClass(label);
     if (canonical === target) {
       await option.click({ force: true });
+      // Small delay to allow form state to update
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return true;
     }
   }
