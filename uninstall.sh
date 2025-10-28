@@ -49,7 +49,8 @@ remove_executable() {
 # Remove from PATH (optional, asks user)
 remove_from_path() {
     local BIN_DIR="$HOME/.local/bin"
-    local SHELL_NAME=$(basename "$SHELL")
+    local SHELL_NAME
+    SHELL_NAME=$(basename "$SHELL")
     local RC_FILE=""
     
     # Determine which shell config file to check

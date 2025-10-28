@@ -203,7 +203,8 @@ EOF
 # Add to PATH
 add_to_path() {
     local BIN_DIR="$HOME/.local/bin"
-    local SHELL_NAME=$(basename "$SHELL")
+    local SHELL_NAME
+    SHELL_NAME=$(basename "$SHELL")
     local RC_FILE=""
     
     # Determine which shell config file to update
@@ -242,9 +243,11 @@ add_to_path() {
             print_success "PATH already configured in $RC_FILE"
         else
             # Add PATH export to config file
-            echo "" >> "$RC_FILE"
-            echo "# Added by jphw installer" >> "$RC_FILE"
-            echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$RC_FILE"
+            {
+                echo ""
+                echo "# Added by jphw installer"
+                echo "export PATH=\"\$HOME/.local/bin:\$PATH\""
+            } >> "$RC_FILE"
             print_success "Added $BIN_DIR to PATH in $RC_FILE"
             print_warning "Please run 'source $RC_FILE' or restart your terminal to use jphw"
         fi
@@ -272,7 +275,8 @@ add_deno_to_path() {
         return 0
     fi
     
-    local SHELL_NAME=$(basename "$SHELL")
+    local SHELL_NAME
+    SHELL_NAME=$(basename "$SHELL")
     local RC_FILE=""
     
     # Determine which shell config file to update
@@ -298,10 +302,12 @@ add_deno_to_path() {
     if [ -n "$RC_FILE" ]; then
         # Check if Deno PATH already exists
         if ! grep -q "DENO_INSTALL" "$RC_FILE" 2>/dev/null; then
-            echo "" >> "$RC_FILE"
-            echo "# Deno installation" >> "$RC_FILE"
-            echo "export DENO_INSTALL=\"$DENO_INSTALL\"" >> "$RC_FILE"
-            echo "export PATH=\"\$DENO_INSTALL/bin:\$PATH\"" >> "$RC_FILE"
+            {
+                echo ""
+                echo "# Deno installation"
+                echo "export DENO_INSTALL=\"$DENO_INSTALL\""
+                echo "export PATH=\"\$DENO_INSTALL/bin:\$PATH\""
+            } >> "$RC_FILE"
             print_success "Added Deno to PATH in $RC_FILE"
         fi
     fi
