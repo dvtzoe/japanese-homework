@@ -105,11 +105,17 @@ install_deno_apt() {
 install_deno_pacman() {
     print_info "Attempting to install Deno using pacman..."
     if command -v pacman &> /dev/null; then
-        if sudo pacman -S --noconfirm deno 2>/dev/null; then
+        if sudo pacman -S --noconfirm deno 2>pacman_error.log; then
             print_success "Deno installed successfully via pacman"
+            rm -f pacman_error.log
             return 0
         else
             print_warning "Failed to install Deno via pacman"
+            if [ -s pacman_error.log ]; then
+                echo -e "${RED}pacman error output:${NC}"
+                cat pacman_error.log
+            fi
+            rm -f pacman_error.log
             return 1
         fi
     else
