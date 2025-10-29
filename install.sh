@@ -128,11 +128,17 @@ install_deno_pacman() {
 install_deno_dnf() {
     print_info "Attempting to install Deno using dnf..."
     if command -v dnf &> /dev/null; then
-        if sudo dnf install -y deno 2>/dev/null; then
+        local DNF_ERR
+        DNF_ERR=$(mktemp)
+        if sudo dnf install -y deno 2> "$DNF_ERR"; then
             print_success "Deno installed successfully via dnf"
+            rm -f "$DNF_ERR"
             return 0
         else
             print_warning "Failed to install Deno via dnf"
+            echo -e "${RED}Error output from dnf:${NC}"
+            cat "$DNF_ERR"
+            rm -f "$DNF_ERR"
             return 1
         fi
     else
