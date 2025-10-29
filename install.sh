@@ -212,15 +212,26 @@ install_deno_official() {
         }
     fi
     
-    # Run the official Deno installer
-    if curl -fsSL https://deno.land/install.sh | sh -s -- --yes; then
-        # Add Deno to PATH for this session
-        export DENO_INSTALL="$HOME/.deno"
-        export PATH="$DENO_INSTALL/bin:$PATH"
-        print_success "Deno installed successfully via official installer"
-        return 0
+    # Download the official Deno installer script to a temporary file
+    # SECURITY WARNING: Downloading and executing remote scripts can be dangerous.
+    # Consider verifying the script's integrity before executing.
+    tmp_script="$(mktemp)"
+    if curl -fsSL https://deno.land/install.sh -o "$tmp_script"; then
+        if sh "$tmp_script" --yes; then
+            # Add Deno to PATH for this session
+            export DENO_INSTALL="$HOME/.deno"
+            export PATH="$DENO_INSTALL/bin:$PATH"
+            print_success "Deno installed successfully via official installer"
+            rm -f "$tmp_script"
+            return 0
+        else
+            print_error "Failed to execute Deno installer script"
+            rm -f "$tmp_script"
+            return 1
+        fi
     else
-        print_error "Failed to install Deno via official installer"
+        print_error "Failed to download Deno installer script"
+        rm -f "$tmp_script"
         return 1
     fi
 }
