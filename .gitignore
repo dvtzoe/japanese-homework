@@ -1,7 +1,5 @@
+# environment variables file
 .env
 
-apps/server/data/
-
-dist/
-
-node_modules/
+# it's auto generated so we can ignore it
+deno.lock

@@ -27,15 +27,8 @@ program
   )
   .option("--headless", "Run the browser in headless mode", false)
   .option("--firefox", "Use Firefox instead of Chromium", false)
-  .option(
-    "--profile <dir>",
-    "Persistent browser profile directory",
-  )
-  .option(
-    "-y, --yes",
-    "Skip confirmation prompts except submission",
-    false,
-  )
+  .option("--profile <dir>", "Persistent browser profile directory")
+  .option("-y, --yes", "Skip confirmation prompts except submission", false)
   .option(
     "-Y, --yes-all",
     "Skip all confirmation prompts including submission",
@@ -107,7 +100,7 @@ try {
     onConfirmNext: options.yes || options.yesAll
       ? () => Promise.resolve(true)
       : () => confirmPrompt("Proceed to the next page?"),
-    onConfirmSubmit: options.yes || options.yesAll
+    onConfirmSubmit: options.yesAll
       ? () => Promise.resolve(true)
       : () => confirmPrompt("Submit the form?"),
     onConfirmClose: options.yesAll
@@ -155,11 +148,14 @@ async function loadCredentials(): Promise<Credentials> {
 }
 
 function isCredentialShape(value: unknown): value is Credentials {
-  return Boolean(value) && typeof value === "object" &&
+  return (
+    Boolean(value) &&
+    typeof value === "object" &&
     typeof (value as { email?: unknown }).email === "string" &&
     typeof (value as { class?: unknown }).class === "string" &&
     typeof (value as { id?: unknown }).id === "string" &&
-    typeof (value as { name?: unknown }).name === "string";
+    typeof (value as { name?: unknown }).name === "string"
+  );
 }
 
 async function promptForCredentials(): Promise<Credentials> {
