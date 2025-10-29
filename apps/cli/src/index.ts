@@ -249,7 +249,7 @@ async function checkForUpdates(): Promise<void> {
       stdout: "piped",
       stderr: "inherit",
     });
-    
+
     let defaultBranch = "main";
     try {
       const { stdout: branchStdout } = await showOrigin.output();
@@ -264,7 +264,13 @@ async function checkForUpdates(): Promise<void> {
     }
 
     const gitStatus = new Deno.Command("git", {
-      args: ["-C", jphwDir, "rev-list", `HEAD...origin/${defaultBranch}`, "--count"],
+      args: [
+        "-C",
+        jphwDir,
+        "rev-list",
+        `HEAD...origin/${defaultBranch}`,
+        "--count",
+      ],
       stdout: "piped",
       stderr: "inherit",
     });
@@ -336,7 +342,7 @@ async function updateJphw(): Promise<void> {
       stdout: "piped",
       stderr: "inherit",
     });
-    
+
     let defaultBranch = "main";
     try {
       const { stdout: branchStdout } = await showOrigin.output();
@@ -352,7 +358,13 @@ async function updateJphw(): Promise<void> {
 
     // Check if updates are available
     const revListCmd = new Deno.Command("git", {
-      args: ["-C", jphwDir, "rev-list", `HEAD...origin/${defaultBranch}`, "--count"],
+      args: [
+        "-C",
+        jphwDir,
+        "rev-list",
+        `HEAD...origin/${defaultBranch}`,
+        "--count",
+      ],
       stdout: "piped",
     });
 
