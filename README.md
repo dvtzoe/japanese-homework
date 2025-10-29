@@ -4,7 +4,7 @@
 
 ## Installation
 
-### Quick Install (Recommended)
+### Quick Instal
 
 The easiest way to install `jphw` is using a single command:
 
@@ -72,18 +72,6 @@ cd japanese-homework
 uninstall.bat
 ```
 
-### Precompiled binary
-
-1. Visit the latest GitHub Release for this repository.
-2. Download the binary that matches your platform and ends with `-with-browser`
-   so you don't have to manually download the browser:
-   - macOS (Intel): `jphw-x86_64-apple-darwin`
-   - macOS (Apple Silicon): `jphw-aarch64-apple-darwin`
-   - Linux (x86_64): `jphw-x86_64-unknown-linux-gnu`
-   - Windows: `jphw-x86_64-pc-windows-msvc.exe`
-3. Extract the file
-4. Execute the executable
-
 ### Manual Installation
 
 #### Prerequisites
@@ -120,6 +108,14 @@ deno task start
 deno task start:cli
 ```
 
+### Options
+
+- `--server <url>` – override the API server (defaults to
+  `https://jphw.crabdance.com`)
+- `--headless` – run the browser without a window (useful on CI)
+- `--firefox` – switch the automation from Chromium to Firefox
+- `--profile <dir>` – reuse an existing browser profile directory
+
 ## 2. Start the Answer Server
 
 By default the CLI sends requests to the hosted server at
@@ -138,7 +134,7 @@ deno task start:server
 Set the following environment variables before launching:
 
 - `DATABASE_URL` – required, PostgreSQL connection string (e.g.,
-  `******localhost:5432/jphw`)
+  `your_user:password@localhost:5432/jphw`)
 - `OPENROUTER_API_KEY` – required
 - `OPENROUTER_MODEL` - The llm model that will be used
 - `PORT` (default `8000`)
@@ -147,11 +143,3 @@ Set the following environment variables before launching:
 
 The server persists cached answers in a PostgreSQL database so repeated
 questions return instantly. The cache table is created automatically on startup.
-
-### Options
-
-- `--server <url>` – override the API server (defaults to
-  `https://jphw.crabdance.com`)
-- `--headless` – run the browser without a window (useful on CI)
-- `--firefox` – switch the automation from Chromium to Firefox
-- `--profile <dir>` – reuse an existing browser profile directory
