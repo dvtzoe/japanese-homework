@@ -237,16 +237,36 @@ async function checkForUpdates(): Promise<void> {
     // Check git status
     const gitCheck = new Deno.Command("git", {
       args: ["-C", jphwDir, "fetch", "--dry-run"],
-      stdout: "null",
-      stderr: "null",
+      stdout: "inherit",
+      stderr: "inherit",
     });
 
     await gitCheck.output();
 
-    const gitStatus = new Deno.Command("git", {
-      args: ["-C", jphwDir, "rev-list", "HEAD...origin/main", "--count"],
+    // Get default branch name dynamically
+    const showOrigin = new Deno.Command("git", {
+      args: ["-C", jphwDir, "remote", "show", "origin"],
       stdout: "piped",
-      stderr: "null",
+      stderr: "inherit",
+    });
+    
+    let defaultBranch = "main";
+    try {
+      const { stdout: branchStdout } = await showOrigin.output();
+      const output = new TextDecoder().decode(branchStdout);
+      const match = output.match(/HEAD branch: (.+)/);
+      if (match) {
+        defaultBranch = match[1].trim();
+      }
+    } catch {
+      // Fallback to main if detection fails
+      defaultBranch = "main";
+    }
+
+    const gitStatus = new Deno.Command("git", {
+      args: ["-C", jphwDir, "rev-list", `HEAD...origin/${defaultBranch}`, "--count"],
+      stdout: "piped",
+      stderr: "inherit",
     });
 
     const { stdout } = await gitStatus.output();
@@ -287,8 +307,8 @@ async function updateJphw(): Promise<void> {
     // Check if we're in a git repository
     const gitCheck = new Deno.Command("git", {
       args: ["-C", jphwDir, "rev-parse", "--git-dir"],
-      stdout: "null",
-      stderr: "null",
+      stdout: "inherit",
+      stderr: "inherit",
     });
 
     const { code } = await gitCheck.output();
@@ -310,9 +330,29 @@ async function updateJphw(): Promise<void> {
     });
     await fetchCmd.output();
 
+    // Get default branch name dynamically
+    const showOrigin = new Deno.Command("git", {
+      args: ["-C", jphwDir, "remote", "show", "origin"],
+      stdout: "piped",
+      stderr: "inherit",
+    });
+    
+    let defaultBranch = "main";
+    try {
+      const { stdout: branchStdout } = await showOrigin.output();
+      const output = new TextDecoder().decode(branchStdout);
+      const match = output.match(/HEAD branch: (.+)/);
+      if (match) {
+        defaultBranch = match[1].trim();
+      }
+    } catch {
+      // Fallback to main if detection fails
+      defaultBranch = "main";
+    }
+
     // Check if updates are available
     const revListCmd = new Deno.Command("git", {
-      args: ["-C", jphwDir, "rev-list", "HEAD...origin/main", "--count"],
+      args: ["-C", jphwDir, "rev-list", `HEAD...origin/${defaultBranch}`, "--count"],
       stdout: "piped",
     });
 
@@ -327,9 +367,9 @@ async function updateJphw(): Promise<void> {
 
     console.log(`Found ${count} new commit(s). Updating...`);
 
-    // Reset to origin/main
+    // Reset to detected default branch
     const resetCmd = new Deno.Command("git", {
-      args: ["-C", jphwDir, "reset", "--hard", "origin/main"],
+      args: ["-C", jphwDir, "reset", "--hard", `origin/${defaultBranch}`],
     });
     await resetCmd.output();
 
