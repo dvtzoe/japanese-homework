@@ -4,33 +4,101 @@
 
 ## Installation
 
+### Quick Install (Recommended)
+
+The easiest way to install `jphw` is using a single command:
+
+#### Unix-like systems (Linux, macOS)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dvtzoe/japanese-homework/main/install-remote.sh | bash
+```
+
+Or clone and install manually:
+
+```sh
+git clone https://github.com/dvtzoe/japanese-homework.git
+cd japanese-homework
+./install.sh
+```
+
+After installation, you can run `jphw` from anywhere:
+
+```sh
+jphw --help
+jphw https://your-homework-url.com
+```
+
+To update to the latest version:
+
+```sh
+jphw update
+```
+
+To uninstall:
+
+```sh
+cd japanese-homework
+./uninstall.sh
+```
+
+#### Windows
+
+Clone and install:
+
+```cmd
+git clone https://github.com/dvtzoe/japanese-homework.git
+cd japanese-homework
+install.bat
+```
+
+After installation, you can run `jphw` from anywhere:
+
+```cmd
+jphw --help
+jphw https://your-homework-url.com
+```
+
+To update to the latest version:
+
+```cmd
+jphw update
+```
+
+To uninstall:
+
+```cmd
+cd japanese-homework
+uninstall.bat
+```
+
 ### Precompiled binary
 
 1. Visit the latest GitHub Release for this repository.
 2. Download the binary that matches your platform and ends with `-with-browser`
-   so you don't have to manually downlaod the browser:
+   so you don't have to manually download the browser:
    - macOS (Intel): `jphw-x86_64-apple-darwin`
    - macOS (Apple Silicon): `jphw-aarch64-apple-darwin`
    - Linux (x86_64): `jphw-x86_64-unknown-linux-gnu`
    - Windows: `jphw-x86_64-pc-windows-msvc.exe`
-3. Extracts the file
+3. Extract the file
 4. Execute the executable
 
-### Manual (Recommended)
+### Manual Installation
 
-#### Prerequisite
+#### Prerequisites
 
 1. [`git`](https://git-scm.com/)
 2. [`deno`](https://deno.com/)
 
-Clone the repository and enters it
+Clone the repository and enter it:
 
 ```sh
 git clone https://github.com/dvtzoe/japanese-homework.git
 cd japanese-homework
 ```
 
-Install Playwright browsers
+Install Playwright browsers:
 
 ```sh
 deno run -A npm:playwright install
@@ -44,12 +112,12 @@ deno run -A npm:playwright install firefox
 npx playwright install
 ```
 
-Run the cli
+Run the CLI:
 
 ```sh
-deno start
+deno task start
 # or
-deno start:cli
+deno task start:cli
 ```
 
 ## 2. Start the Answer Server
