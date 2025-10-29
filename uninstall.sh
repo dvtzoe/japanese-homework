@@ -80,7 +80,11 @@ remove_from_path() {
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 # Remove the jphw PATH lines
-                sed -i.bak '/# Added by jphw installer/,+1d' "$RC_FILE"
+                if [ "$(uname)" = "Darwin" ]; then
+                    sed -i .bak '/# Added by jphw installer/,+1d' "$RC_FILE"
+                else
+                    sed -i.bak '/# Added by jphw installer/,+1d' "$RC_FILE"
+                fi
                 print_success "Removed jphw PATH configuration from $RC_FILE"
                 print_info "Backup saved as ${RC_FILE}.bak"
             else
