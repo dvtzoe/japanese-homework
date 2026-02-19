@@ -69,6 +69,13 @@ export default async function client(options: ClientOptions): Promise<void> {
     while (true) {
       await toggleEmailOptions(page);
       const questions = await collectQuestions(page);
+      if (questions.length === 0) {
+        console.warn(
+          `Warning: no questions detected on page ${
+            pageIndex + 1
+          }. The form may still be loading or use an unexpected layout.`,
+        );
+      }
       console.log(
         `Detected ${questions.length} questions on page ${pageIndex + 1}`,
       );
@@ -114,7 +121,7 @@ export default async function client(options: ClientOptions): Promise<void> {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      const nextButton = page.getByRole("button", { name: /next/i });
+      const nextButton = page.getByRole("button", { name: /(next|次へ)/i });
       if (await nextButton.count()) {
         const proceed = options.onConfirmNext
           ? await options.onConfirmNext({
@@ -133,11 +140,14 @@ export default async function client(options: ClientOptions): Promise<void> {
         await new Promise((resolve) => setTimeout(resolve, 300));
         await nextButton.first().click();
         await page.waitForLoadState("networkidle");
+        // Wait for the new page's questions to appear in the DOM
+        await page.waitForSelector('[role="listitem"]', { timeout: 10000 })
+          .catch(() => {});
         pageIndex += 1;
         continue;
       }
 
-      const submitButton = page.getByRole("button", { name: /submit/i });
+      const submitButton = page.getByRole("button", { name: /(submit|送信)/i });
 
       if (await submitButton.count()) {
         const proceed = options.onConfirmSubmit
@@ -160,9 +170,9 @@ export default async function client(options: ClientOptions): Promise<void> {
         console.log("Form submitted.");
       }
 
-      await page.waitForSelector("text=Your response has been recorded").catch(
-        () => {},
-      );
+      await page.waitForSelector(
+        "text=/Your response has been recorded|回答を記録しました/",
+      ).catch(() => {});
       await page.waitForLoadState("networkidle").catch(() => {});
 
       const viewScoreButton = page.locator('[aria-label="View score"]');

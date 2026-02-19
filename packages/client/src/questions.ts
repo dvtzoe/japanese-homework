@@ -6,12 +6,20 @@ import type { QuestionContext } from "./types.ts";
 
 export async function collectQuestions(page: Page): Promise<QuestionContext[]> {
   try {
-    await page.waitForSelector('[role="listitem"]', { timeout: 5000 });
+    await page.waitForSelector('[role="listitem"]', { timeout: 15000 });
   } catch {
-    // No questions available on this page.
+    // No questions visible yet; proceed with whatever is in the DOM.
   }
 
   const locator = page.locator('[role="listitem"]');
+  // One retry: if the initial count is zero the page may still be rendering.
+  if (await locator.count() === 0) {
+    try {
+      await page.waitForSelector('[role="listitem"]', { timeout: 5000 });
+    } catch {
+      // Still nothing — page genuinely has no list items.
+    }
+  }
   const count = await locator.count();
   const result: QuestionContext[] = [];
 
