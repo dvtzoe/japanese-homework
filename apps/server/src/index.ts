@@ -162,15 +162,30 @@ function parseBatchRequest(payload: unknown): QuestionPayload[] {
 }
 
 async function answerQuestion(question: QuestionPayload): Promise<string> {
-  // Hash images if present
-  const imageHash = question.imageUrls.length > 0
-    ? await hashImagesFromUrls(question.imageUrls)
-    : undefined;
+  const hasImages = question.imageUrls.length > 0;
 
-  // Try to find cached answer using question details
-  const cached = await cache.get(question.text, imageHash, question.choices);
-  if (cached) {
-    return cached.answer;
+  // For text-only questions: no hashing needed, hit cache immediately.
+  // For image questions: hash images and check text+choices cache in parallel
+  // so the network round-trips for image downloads overlap with the DB call.
+  const [imageHash, textOnlyHit] = await Promise.all([
+    hasImages
+      ? hashImagesFromUrls(question.imageUrls)
+      : Promise.resolve(undefined),
+    // Text+choices uniquely identifies text-only questions; safe to use as-is.
+    // For image questions we get this for free while hashing but won't act on it
+    // without the hash to avoid returning a stale answer for a different image.
+    cache.get(question.text, undefined, question.choices),
+  ]);
+
+  // Use the text-only cache hit when there are no images to differentiate.
+  if (!hasImages && textOnlyHit) {
+    return textOnlyHit.answer;
+  }
+
+  // For image questions, do the full lookup keyed on the hash.
+  if (imageHash) {
+    const cached = await cache.get(question.text, imageHash, question.choices);
+    if (cached) return cached.answer;
   }
 
   const client = getRouterClient();
@@ -182,7 +197,6 @@ async function answerQuestion(question: QuestionPayload): Promise<string> {
     answer_index: result.answerIndex,
     question: question.text,
     image_hash: imageHash,
-    extracted_text: result.extractedText,
     choices: question.choices,
   });
 
